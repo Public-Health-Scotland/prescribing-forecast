@@ -1,6 +1,7 @@
 # Folders
 /data
 /accuracy
+/lookups
 
 # History files
 .Rhistory
