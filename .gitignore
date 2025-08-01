@@ -1,3 +1,7 @@
+# Folders
+/data
+/accuracy
+
 # History files
 .Rhistory
 .Rapp.history
