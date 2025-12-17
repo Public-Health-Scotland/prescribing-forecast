@@ -1,5 +1,24 @@
 server <- function(input, output, session) {
   
+  ##############################################.
+  # SHINY MANAGER ----
+  ##############################################.
+  
+  # load in credentials file
+  credentials <- readRDS("admin/credentials.rds")
+  
+  res_auth <- secure_server(
+    check_credentials = check_credentials(credentials),
+    # will timeout the app on the server
+    timeout = 30
+  )
+  
+  output$auth_output <- renderPrint({
+    reactiveValuesToList(res_auth)
+  })
+  
+  ##############################################
+  
   # This chunk stops the app from timing out 
   auto_invalidate <- reactiveTimer(10000)
   observe({
@@ -16,7 +35,7 @@ server <- function(input, output, session) {
   
   
   # Get SERVER code for the data pages
-  #source(file.path("/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast/shiny/pages/spotlight/spotlight_server.R"), local = TRUE)$value
+  #source(file.path("shiny/pages/spotlight/spotlight_server.R"), local = TRUE)$value
   source(file.path("shiny/pages/volume/volume_server.R"), local = TRUE)$value
   source(file.path("shiny/pages/cost/cost_server.R"), local = TRUE)$value
   source(file.path("shiny/pages/trend monitoring/trend_monitoring_server.R"), local = TRUE)$value

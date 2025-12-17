@@ -61,9 +61,9 @@ ui <- secure_app(
         tabPanel(title = "Cost",
                  icon = icon_no_warning_fn("sterling-sign"),
                  value = "Cost",
-  
+                 
                  source(file.path("shiny/pages/cost/cost_ui.R"), local = TRUE)$value
-  
+                 
         ),
         
         tabPanel(title = "Monitoring",
@@ -94,4 +94,52 @@ ui <- secure_app(
     ) 
   )
 )
-### END OF SCRIPT ###
+
+
+server <- function(input, output, session) {
+  
+  ##############################################.
+  # SHINY MANAGER ----
+  ##############################################.
+  
+  # load in credentials file
+  credentials <- readRDS("admin/credentials.rds")
+  
+  res_auth <- secure_server(
+    check_credentials = check_credentials(credentials),
+    # will timeout the app on the server
+    timeout = 30
+  )
+  
+  output$auth_output <- renderPrint({
+    reactiveValuesToList(res_auth)
+  })
+  
+  ##############################################
+  
+  # This chunk stops the app from timing out 
+  auto_invalidate <- reactiveTimer(10000)
+  observe({
+    auto_invalidate()
+    cat(".")
+  })
+  
+  # Get functions
+  source(file.path("shiny/functions/core_functions.R"), local = TRUE)$value
+  
+  # # Get content for intro and induction pages (key points would probably go here too)
+  # source(file.path("pages/intro_page.R"), local = TRUE)$value
+  # source(file.path("pages/instructions_page.R"), local = TRUE)$value
+  
+  
+  # Get SERVER code for the data pages
+  #source(file.path("shiny/pages/spotlight/spotlight_server.R"), local = TRUE)$value
+  source(file.path("shiny/pages/volume/volume_server.R"), local = TRUE)$value
+  source(file.path("shiny/pages/cost/cost_server.R"), local = TRUE)$value
+  source(file.path("shiny/pages/trend monitoring/trend_monitoring_server.R"), local = TRUE)$value
+  
+}
+
+# Run the application
+shinyApp(ui = ui, server = server)
+

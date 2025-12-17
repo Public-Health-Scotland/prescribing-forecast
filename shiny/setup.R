@@ -41,6 +41,10 @@ library(tibble)
 # PHS styling packages ----
 library(phsstyles)
 
+# Deployment ----
+library(rsconnect)
+library(shinymanager)
+
 # Load core functions ----
 source("shiny/functions/core_functions.R")
 
