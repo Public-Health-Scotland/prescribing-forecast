@@ -2,6 +2,19 @@
 /data
 /accuracy
 /lookups
+/slwg
+/archive
+/parameters
+/key reading
+/investigation
+/shiny/www
+/shiny/data
+
+# Data and picture files
+*.png
+*.csv
+*.rds
+*.xlsx
 
 # History files
 .Rhistory

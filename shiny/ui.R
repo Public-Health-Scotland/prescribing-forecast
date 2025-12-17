@@ -6,11 +6,10 @@
 # Description of content
 ##########################################################
 
+setwd('/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast')
 
 # Get packages
-setwd('/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast/shiny')
-
-source("setup.R")
+source("shiny/setup.R")
 
 # UI
 ui <- fluidPage(
@@ -26,43 +25,67 @@ ui <- fluidPage(
       ), # PHS logo links to PHS website
       style = "position: relative; top: -5px;"),
       windowTitle = "Pharmacy Forecast",# Title for browser tab
-      header = tags$head(includeCSS("www/styles.css"),  # CSS stylesheet
-                         includeScript("www/javascript.js"),
+      header = tags$head(includeCSS("shiny/www/styles.css"),  # CSS stylesheet
+                         includeScript("shiny/www/javascript.js"),
                          tags$link(rel = "shortcut icon", href = "favicon_phs.ico") # Icon for browser tab
       ),
       
       ##############################################.
-      # INTRODUCTION PAGE ----
+      # NOTES PAGE ----
       ##############################################.
-      # tabPanel(title = "Introduction",
-      #          icon = icon_no_warning_fn("circle-info"),
-      #          value = "Introduction",
+      tabPanel(title = "Notes",
+               icon = icon_no_warning_fn("clipboard"),
+               value = "Notes",
+               
+               source(file.path("shiny/pages/notes/notes_ui.R"), local = TRUE)$value
+               
+      ),
+      
+      # tabPanel(title = "Spotlight",
+      #          icon = icon_no_warning_fn("lightbulb"),
+      #          value = "Spotlight",
       #          
-      #          source(file.path("/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast/shiny/pages/accuracy/accuracy_ui.R"), local = TRUE)$value
-      #          
-      # ),
-      # 
-      # tabPanel(title = "Results comparison",
-      #          icon = icon_no_warning_fn("circle-info"),
-      #          value = "Results comparison",
-      #          
-      #          source(file.path("/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast/shiny/pages/results/results_ui.R"), local = TRUE)$value
-      #          
-      # ),
-      # 
-      # tabPanel(title = "Scotland results",
-      #          icon = icon_no_warning_fn("circle-info"),
-      #          value = "Scotland results",
-      #          
-      #          source(file.path("/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast/shiny/pages/scotland/scotland_results_ui.R"), local = TRUE)$value
+      #          source(file.path("/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast/shiny/pages/spotlight/spotlight_ui.R"), local = TRUE)$value
       #          
       # ),
       
-      tabPanel(title = "Aggregated forecast",
+      tabPanel(title = "Volume",
                icon = icon_no_warning_fn("line-chart"),
-               value = "Aggregated forecast",
+               value = "Volume",
                
-               source(file.path("/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast/shiny/pages/final/final_ui.R"), local = TRUE)$value
+               source(file.path("shiny/pages/volume/volume_ui.R"), local = TRUE)$value
+               
+      ),
+      
+      tabPanel(title = "Cost",
+               icon = icon_no_warning_fn("sterling-sign"),
+               value = "Cost",
+
+               source(file.path("shiny/pages/cost/cost_ui.R"), local = TRUE)$value
+
+      ),
+      
+      tabPanel(title = "Monitoring",
+               icon = icon_no_warning_fn("magnifying-glass-chart"),
+               value = "Monitoring",
+               
+               source(file.path("shiny/pages/trend monitoring/trend_monitoring_ui.R"), local = TRUE)$value
+               
+      ),
+      
+      tabPanel(title = "Model Details",
+               icon = icon_no_warning_fn("circle-info"),
+               value = "Model Details",
+               
+               source(file.path("shiny/pages/model details/model_details_ui.R"), local = TRUE)$value
+               
+      ),
+      
+      tabPanel(title = "Feedback",
+               icon = icon_no_warning_fn("clipboard-question"),
+               value = "Feedback",
+               
+               source(file.path("shiny/pages/feedback/feedback_ui.R"), local = TRUE)$value
                
       )
       
