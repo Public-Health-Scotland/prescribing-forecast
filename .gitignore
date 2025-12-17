@@ -9,6 +9,13 @@
 /investigation
 /shiny/www
 /shiny/data
+admin/
+deploy/
+rsconnect/ 
+admin/
+deploy/
+deployment/deployment_secrets.R
+deployment/
 
 # Data and picture files
 *.png
