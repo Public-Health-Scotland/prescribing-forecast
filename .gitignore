@@ -1,3 +1,21 @@
+# Folders
+/data
+/accuracy
+/lookups
+/slwg
+/archive
+/shiny/pages/parameters
+/key reading
+/investigation
+/shiny/www
+/shiny/data
+
+# Data and picture files
+*.png
+*.csv
+*.rds
+*.xlsx
+
 # History files
 .Rhistory
 .Rapp.history
