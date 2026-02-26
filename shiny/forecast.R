@@ -18,7 +18,6 @@ library(readxl)
 library(officer)
 library(glue)
 library(devtools)
-#library(fpp)
 library(urca)
 library(phsmethods)
 library(tibble)
@@ -27,7 +26,7 @@ library(bizdays)
 ## 1.2. Initialise variables and file paths ----
 '%!in%' <- function(x,y)!('%in%'(x,y))
 
-path <- '/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast'
+#path <- '/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast'
 
 ## 1.3. Load in data ----
 

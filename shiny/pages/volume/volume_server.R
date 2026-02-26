@@ -86,35 +86,36 @@ output$items_plot <- renderPlotly({
       name = '80% CI') %>%
     # Update title and axes
     layout(title = paste('Forecasting monthly number of paid items in', input$final_board),
-           xaxis = list(title = 'Date',
+           xaxis = list(title = '<b>Date</b>',
                         rangeslider = list(visible = TRUE,          # Enable the range slider
                                            bgcolor = phs_colours('phs-magenta-30'),   # Background color of the range slider
                                            bordercolor = phs_colours('phs-magenta'),    # Border color
-                                           borderwidth = 2),
-                        rangeselector = list(
-                          buttons = list(
-                            list(
-                              count = 6,
-                              label = "6 mo",
-                              step = "month",
-                              stepmode = "backward"),
-                            list(
-                              count = 1,
-                              label = "1 yr",
-                              step = "year",
-                              stepmode = "backward"),
-                            list(
-                              count = 2,
-                              label = "2 yr",
-                              step = "year",
-                              stepmode = "backward"),
-                            list(
-                              count = 1,
-                              label = "YTD",
-                              step = "year",
-                              stepmode = "todate"),
-                            list(step = "all")))),
-           yaxis = list(title = 'Number of Paid Items'),
+                                           borderwidth = 2)#, 
+                        # rangeselector = list(
+                        #   buttons = list(
+                        #     list(
+                        #       count = 6,
+                        #       label = "6 mo",
+                        #       step = "month",
+                        #       stepmode = "backward"),
+                        #     list(
+                        #       count = 1,
+                        #       label = "1 yr",
+                        #       step = "year",
+                        #       stepmode = "backward"),
+                        #     list(
+                        #       count = 2,
+                        #       label = "2 yr",
+                        #       step = "year",
+                        #       stepmode = "backward"),
+                        #     list(
+                        #       count = 1,
+                        #       label = "YTD",
+                        #       step = "year",
+                        #       stepmode = "todate"),
+                        #     list(step = "all")))
+                        ),
+           yaxis = list(title = '<b>Number of Paid Items</b>'),
            font = list(family = 'Arial'))
 
   plot
@@ -147,35 +148,36 @@ output$items_wd_plot <- renderPlotly({
                 name = '80% CI') %>%
     # Update title and axes
     layout(title = paste('Forecasting monthly number of paid items per working day in', input$final_board),
-           xaxis = list(title = 'Date',
+           xaxis = list(title = '<b>Date</b>',
                         rangeslider = list(visible = TRUE,          # Enable the range slider
                                            bgcolor = phs_colours('phs-magenta-30'),   # Background color of the range slider
                                            bordercolor = phs_colours('phs-magenta'),    # Border color
-                                           borderwidth = 2),
-                        rangeselector = list(
-                          buttons = list(
-                            list(
-                              count = 6,
-                              label = "6 mo",
-                              step = "month",
-                              stepmode = "backward"),
-                            list(
-                              count = 1,
-                              label = "1 yr",
-                              step = "year",
-                              stepmode = "backward"),
-                            list(
-                              count = 2,
-                              label = "2 yr",
-                              step = "year",
-                              stepmode = "backward"),
-                            list(
-                              count = 1,
-                              label = "YTD",
-                              step = "year",
-                              stepmode = "todate"),
-                            list(step = "all")))),
-           yaxis = list(title = 'Number of paid items per working day'),
+                                           borderwidth = 2)#,
+                        # rangeselector = list(
+                        #   buttons = list(
+                        #     list(
+                        #       count = 6,
+                        #       label = "6 mo",
+                        #       step = "month",
+                        #       stepmode = "backward"),
+                        #     list(
+                        #       count = 1,
+                        #       label = "1 yr",
+                        #       step = "year",
+                        #       stepmode = "backward"),
+                        #     list(
+                        #       count = 2,
+                        #       label = "2 yr",
+                        #       step = "year",
+                        #       stepmode = "backward"),
+                        #     list(
+                        #       count = 1,
+                        #       label = "YTD",
+                        #       step = "year",
+                        #       stepmode = "todate"),
+                        #     list(step = "all")))
+                        ),
+           yaxis = list(title = '<b>Number of paid items per working day</b>'),
            font = list(family = 'Arial'))
   
   plot

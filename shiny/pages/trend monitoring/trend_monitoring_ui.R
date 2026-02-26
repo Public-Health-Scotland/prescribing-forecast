@@ -5,9 +5,9 @@ tagList(
   ## Heading and introductory text
   fluidRow(
     h1("Monitoring trend"),
-    p("This tab allows users to monitor underlying trends that may be influencing the forecast. These are currently number of paid items per prescription, and the number of prescriptions per working day."),
+    p("This tab allows users to monitor underlying trends that may be influencing the forecast. These are currently number of paid items per prescription, and the number of prescriptions per working day.")#,
     #actionButton('notes', 'Click here for key notes'),
-    p(linebreaks(0.5))
+    #p(linebreaks(0.5))
 
     
   ),
@@ -49,20 +49,22 @@ tagList(
               
               fluidRow(    
                 p(linebreaks(1)),
-                column(12, plotlyOutput('items_pp')),
-                p(linebreaks(1)),
-                downloadButton("downloadData_items_pp", "Download Data")
+                column(10, plotlyOutput('items_pp'))
+                ),
+                fluidRow(
+                  downloadButton("downloadData_items_pp", "Download Data", style = "width:200px;")
               )
               
     ),
     
     nav_panel('Prescriptions per working day',
               
-              fluidRow(    
+              fluidRow(   
                 p(linebreaks(1)),
-                column(12, plotlyOutput('pp_wd_plot')),
-                p(linebreaks(1)),
-                downloadButton("downloadData_pp_wd", "Download Data")
+                column(10, plotlyOutput('pp_wd_plot'))
+                ),
+              fluidRow(
+                downloadButton("downloadData_pp_wd", "Download Data", style = "width:200px;")
               )
               
     )

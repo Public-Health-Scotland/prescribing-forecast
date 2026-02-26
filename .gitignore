@@ -4,6 +4,7 @@
 /lookups
 /slwg
 /archive
+/www
 /shiny/pages/parameters
 /key reading
 /investigation
@@ -22,6 +23,7 @@ deployment/
 *.csv
 *.rds
 *.xlsx
+*.pdf
 
 # History files
 .Rhistory

@@ -6,7 +6,7 @@
 # Description of content
 ##########################################################
 
-setwd('/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast')
+#setwd('/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast')
 
 # Get packages
 source("shiny/setup.R")

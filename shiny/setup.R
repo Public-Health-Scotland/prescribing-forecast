@@ -10,6 +10,7 @@ library(bsicons)
 library(cookies)
 library(login)
 library(bs4Dash)
+library(rintrojs)
 
 # Data wrangling packages ----
 library(dplyr)
@@ -33,7 +34,6 @@ library(readxl)
 library(officer)
 library(glue)
 library(devtools)
-library(fpp)
 library(urca)
 library(phsmethods)
 library(tibble)
@@ -84,7 +84,12 @@ bttn_remove <- list(
 # LOAD IN DATA HERE ----
 
 ############## Forecast ############## 
-forecast <- readRDS('shiny/data/aggregated-forecast-2025-11-04-wd.rds')
+forecast <- readRDS('shiny/forecasts/sarima/output/forecast-run-2.rds') %>%
+  filter(Historical_Data == "12 months of historical data",
+         Year == 2025,
+         F_Horizon == 48,
+         Arima_Error == FALSE) %>%
+  select(-c(Historical_Data, Year, F_Horizon, Arima_Error))
 
 ############## Volume Data ############## 
 
@@ -183,15 +188,33 @@ combined_data_wd <- combined_data_wd %>%
 #mutate(`Number of items per prescription per working day` = `Number of Paid Items per working day` / `No of Prescriptions per working day`)
 
 ## 1.4. SARIMA model v2.1 - run 1 ----
-sarima_v2.1 <- readRDS('shiny/forecasts/sarima/output/forecast-run-1.rds')
+# sarima_v2.1 <- readRDS('shiny/forecasts/sarima/output/forecast-run-1.rds') %>%
+#   filter(Historical_Data == "12 months of historical data",
+#          Year == 2025,
+#          F_Horizon == 48,
+#          Arima_Error == FALSE) %>%
+#   select(-c(Historical_Data, Year, F_Horizon, Arima_Error))
 
-sarima_v2.1_performance  <- readRDS('shiny/forecasts/sarima/output/forecast-performance-2025-11-18.rds')
+sarima_v2.1_performance  <- readRDS('shiny/forecasts/sarima/output/forecast-performance-2026-01-14.rds')
 
 ############## Variables ############## 
 healthboards <- unique(forecast_items$Board)
 financial_years <- unique(forecast_items$FY)
 
+# # LOGIN----
+# # get protection status for live app
+# Protected <- readRDS("data/Protect.rds")
+# 
+# # Set password if required for deployed app
+# # Whether to password protect the app - set in deployment script
+# password_protect <- Protected
 
+# Create a custom theme
+my_theme <- bs_theme(
+  version = 5,                # Bootstrap 5
+  primary = "#3F3685",        # Change primary button colour
+  secondary = "#0078D4"       # Change secondary button colour
+)
 
 
 

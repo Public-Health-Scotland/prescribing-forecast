@@ -5,10 +5,10 @@ tagList(
   ## Heading and introductory text
   fluidRow(
     h1("Volume forecasting"),
-    p("Forecasting number of paid items using SARIMA - refer to 'Model details' tab for more information."),
+    p("Forecasting number of paid items using SARIMA - refer to 'Model details' tab for more information.")#,
     
     #actionButton('notes', 'Click here for key notes'),
-    p(linebreaks(0.5))
+    #p(linebreaks(0.5))
 
     
   ),
@@ -56,16 +56,17 @@ tagList(
               
               conditionalPanel(condition = "input.pi_view == 'Forecast'", 
                                fluidRow(
-                                 p(linebreaks(1)),
-                                 column(12, plotlyOutput("items_plot")),
-                                 p(linebreaks(1)),
-                                 downloadButton("downloadData_items", "Download Data")
-                               )),
+                                 column(10, plotlyOutput("items_plot"))
+                               ),
+                               fluidRow(
+                                 downloadButton("downloadData_items", "Download Data", style = "width:200px;")
+                               )
+                               ),
               
               conditionalPanel(condition = "input.pi_view == 'Year-on-year change (%)'", 
                                fluidRow(
                                  p(linebreaks(1)),
-                                 column(12, plotlyOutput("change_items")),
+                                 column(10, plotlyOutput("change_items")),
                                  p(linebreaks(1))#,
                                  #downloadButton("downloadData_yearly_change", "Download Data")
                                ))

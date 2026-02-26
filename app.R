@@ -6,13 +6,16 @@
 # Description of content
 ##########################################################
 
-setwd('/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast')
+#setwd('/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast')
 
 # Get packages
 source("shiny/setup.R")
 
 # UI
 ui <- secure_app(
+  
+  theme = my_theme,
+  
   fluidPage(
     lang = "en",
     tagList(
@@ -24,10 +27,10 @@ ui <- secure_app(
                            href = "https://www.publichealthscotland.scot/",
                            target = "_blank"
         ), # PHS logo links to PHS website
-        style = "position: relative; top: -5px;"),
+        style = "position: relative; top: 0.8em; right: 0.8em; padding-bottom: 0.4em;"),
         windowTitle = "Pharmacy Forecast",# Title for browser tab
-        header = tags$head(includeCSS("shiny/www/styles.css"),  # CSS stylesheet
-                           includeScript("shiny/www/javascript.js"),
+        header = tags$head(includeCSS("www/styles.css"),  # CSS stylesheet
+                           #includeScript("shiny/www/javascript.js"),
                            tags$link(rel = "shortcut icon", href = "favicon_phs.ico") # Icon for browser tab
         ),
         
@@ -36,7 +39,7 @@ ui <- secure_app(
         ##############################################.
         tabPanel(title = "Notes",
                  icon = icon_no_warning_fn("clipboard"),
-                 value = "Notes",
+                 value = "not",
                  
                  source(file.path("shiny/pages/notes/notes_ui.R"), local = TRUE)$value
                  
@@ -52,7 +55,7 @@ ui <- secure_app(
         
         tabPanel(title = "Volume",
                  icon = icon_no_warning_fn("line-chart"),
-                 value = "Volume",
+                 value = "vol",
                  
                  source(file.path("shiny/pages/volume/volume_ui.R"), local = TRUE)$value
                  
@@ -60,7 +63,7 @@ ui <- secure_app(
         
         tabPanel(title = "Cost",
                  icon = icon_no_warning_fn("sterling-sign"),
-                 value = "Cost",
+                 value = "cost",
                  
                  source(file.path("shiny/pages/cost/cost_ui.R"), local = TRUE)$value
                  
@@ -68,7 +71,7 @@ ui <- secure_app(
         
         tabPanel(title = "Monitoring",
                  icon = icon_no_warning_fn("magnifying-glass-chart"),
-                 value = "Monitoring",
+                 value = "mon",
                  
                  source(file.path("shiny/pages/trend monitoring/trend_monitoring_ui.R"), local = TRUE)$value
                  
@@ -76,7 +79,7 @@ ui <- secure_app(
         
         tabPanel(title = "Model Details",
                  icon = icon_no_warning_fn("circle-info"),
-                 value = "Model Details",
+                 value = "mod",
                  
                  source(file.path("shiny/pages/model details/model_details_ui.R"), local = TRUE)$value
                  
@@ -84,7 +87,7 @@ ui <- secure_app(
         
         tabPanel(title = "Feedback",
                  icon = icon_no_warning_fn("clipboard-question"),
-                 value = "Feedback",
+                 value = "feed",
                  
                  source(file.path("shiny/pages/feedback/feedback_ui.R"), local = TRUE)$value
                  
@@ -98,23 +101,9 @@ ui <- secure_app(
 
 server <- function(input, output, session) {
   
-  ##############################################.
-  # SHINY MANAGER ----
-  ##############################################.
-  
-  # load in credentials file
-  credentials <- readRDS("admin/credentials.rds")
-  
-  res_auth <- secure_server(
-    check_credentials = check_credentials(credentials),
-    # will timeout the app on the server
-    timeout = 30
-  )
-  
-  output$auth_output <- renderPrint({
-    reactiveValuesToList(res_auth)
-  })
-  
+  ##############################################
+  # Password protection----
+  source(file.path("deployment/protect_app.R"), local = TRUE)$value
   ##############################################
   
   # This chunk stops the app from timing out 
@@ -133,12 +122,19 @@ server <- function(input, output, session) {
   
   
   # Get SERVER code for the data pages
+  source(file.path("shiny/pages/notes/notes_server.R"), local = TRUE)$value
   #source(file.path("shiny/pages/spotlight/spotlight_server.R"), local = TRUE)$value
   source(file.path("shiny/pages/volume/volume_server.R"), local = TRUE)$value
   source(file.path("shiny/pages/cost/cost_server.R"), local = TRUE)$value
   source(file.path("shiny/pages/trend monitoring/trend_monitoring_server.R"), local = TRUE)$value
   
 }
+
+# will password protect the app when deployed
+# if Protect = TRUE
+# if(password_protect){
+#   ui <- secure_app(ui)
+# }
 
 # Run the application
 shinyApp(ui = ui, server = server)

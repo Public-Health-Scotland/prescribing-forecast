@@ -5,10 +5,10 @@ tagList(
   ## Heading and introductory text
   fluidRow(
     h1("Cost forecasting"),
-    p("Forecasting gross ingredient cost and cost per item using SARIMA - refer to 'Model details' tab for more information."),
+    p("Forecasting gross ingredient cost and cost per item using SARIMA - refer to 'Model details' tab for more information.")#,
     
     #actionButton('cost_notes', 'Click here for key notes'),
-    p(linebreaks(0.5))
+    #p(linebreaks(0.5))
 
     
   ),
@@ -34,15 +34,17 @@ tagList(
               
               conditionalPanel(condition = "input.gic_view == 'Forecast'",
                                fluidRow(
-                                 column(12, plotlyOutput("gic_plot")),
-                                 p(linebreaks(1)),
-                                 downloadButton("downloadData_gic", "Download Data")
-                               )),
+                                 column(10, plotlyOutput("gic_plot"))
+                                 ),
+                               fluidRow(
+                                 downloadButton("downloadData_gic", "Download Data", style = "width:200px;")
+                                 )
+                               ),
               
               conditionalPanel(condition = "input.gic_view == 'Year-on-year change (%)'",
                                fluidRow(
                                  p(linebreaks(1)),
-                                 column(12, plotlyOutput("change_gic")),
+                                 column(10, plotlyOutput("change_gic")),
                                  p(linebreaks(1))#,
                                  #downloadButton("downloadData_yearly_change", "Download Data")
                                )
@@ -60,16 +62,17 @@ tagList(
               
               conditionalPanel(condition = "input.cpi_view == 'Forecast'",
                                fluidRow(
-                                 p(linebreaks(1)),
-                                 column(12, plotlyOutput("cpi_plot")),
-                                 p(linebreaks(1)),
-                                 downloadButton("downloadData_cpi", "Download Data")
-                               )),
+                                 column(10, plotlyOutput("cpi_plot"))
+                               ),
+                               fluidRow(
+                                 downloadButton("downloadData_cpi", "Download Data", style = "width:200px;")
+                                 )
+                               ),
               
               conditionalPanel(condition = "input.cpi_view == 'Year-on-year change (%)'",
                                fluidRow(
                                  p(linebreaks(1)),
-                                 column(12, plotlyOutput("change_cpi")),
+                                 column(10, plotlyOutput("change_cpi")),
                                  p(linebreaks(1))#,
                                  #downloadButton("downloadData_yearly_change", "Download Data")
                                )

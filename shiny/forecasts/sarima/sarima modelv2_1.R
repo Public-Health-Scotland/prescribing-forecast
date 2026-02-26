@@ -1,6 +1,6 @@
 ### SARIMA Forecast
 ### Honours Project
-### Date last updated: 12/11/2025
+### Date last updated: 15/01/2026
 ### Author: Liam Rooney
 ### Model: v2.1
 
@@ -10,11 +10,13 @@
 ###    - also eliminates any effect of the Argyll & Clyde HB split (circa 2006) from showing in the data
 
 ### Key notes for running this script:
-### Once the variables at lines 43, 44, 45, 51 and 65 have been defined by the user: 
+### Once the variables at lines 48, 49, 50, 56, 70, 72 and 74 have been defined by the user: 
 ### 1. Click Source --> Source as Workbench Job --> define the memory parameters
 ### 2. Sit back and let the forecast work its magic! 
 
 options(scipen = 999)
+
+start <- Sys.time()
 
 # 1. Load packages, key variables and data ----
 
@@ -35,18 +37,20 @@ library(tibble)
 library(bizdays)
 library(doParallel)
 library(foreach)
-#library(fpp)
-
+library(ggtime)
+library(tsibble)
+library(feasts)
 
 ## 1.2. Initialise variables and file paths ----
 '%!in%' <- function(x,y)!('%in%'(x,y))
 
 path <- '/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast'
+setwd('/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast')
 
 ## 1.3. Logical variables to assist in job run
 working_day = FALSE
-forecast_evaluation = FALSE
-forecast_results = TRUE
+forecast_evaluation = TRUE
+forecast_results = FALSE
 
 # These are the columns that will be forecasted
 # WARNING: The more columns included, the longer the runtime will be. It is recommended that this script is set to run as a Workbench job.
@@ -66,29 +70,28 @@ columns_to_forecast = c(
 # For example, running the script to forecast for the four years following 2023 would result in the time series 
 # being capped at August 2020 if that was the last month of data loaded into PIS at the time of running. This ensures
 # that roughly 25% of the time series is included in the test data and that said data covers a whole number of years (3 in this example).
-years_to_run <- c(2022, 2023, 2024, 2025)
+years_to_run <- c(2025)
 
 historical_data = 12 # months
 
-run_number = 1
+run_number = 3
 
 # 2. Read in data and some processing ----
-data <- read.csv(paste0(glue('{path}/shiny/forecasts/data/BNF Demographic Data.csv')), check.names = FALSE) %>%
-  select(-`Paid BNF Chapter Code`)
+data <- read.csv(paste0(glue('shiny/forecasts/data/Historical Data.csv')), check.names = FALSE)
 
 data$`Claim PD Paid GIC excl. BB` <- as.double(gsub(",", "", data$`Claim PD Paid GIC excl. BB`))
-data$`Paid BNF Chapter Description`[data$`Paid BNF Chapter Description` %in% c("", NA)] <- "BLANK CHAPTER" # assign NAs to any blank values
-data$`Age Band (patient age at paid date)`[data$`Age Band (patient age at paid date)` %in% c("", NA)] <- "BLANK AGE BAND" # assign NAs to any blank values
+#data$`Paid BNF Chapter Description`[data$`Paid BNF Chapter Description` %in% c("", NA)] <- "BLANK CHAPTER" # assign NAs to any blank values
+#data$`Age Band (patient age at paid date)`[data$`Age Band (patient age at paid date)` %in% c("", NA)] <- "BLANK AGE BAND" # assign NAs to any blank values
 
 board_data <- data %>%
   #bnf_demographic <- data %>%
   mutate(`Paid Date` = dmy(`Paid Date`)) %>%
-  filter(`Paid Date` > '2009-12-31') %>% # filter data for 2010 onwards so those values can be used as lags for 2011, where there was introduction of free prescriptions
+  filter(`Paid Date` > '2009-12-31') #%>% # filter data for 2010 onwards so those values can be used as lags for 2011, where there was introduction of free prescriptions
   # aggregate data to exclude BNF chapter and age band - comment out if wanting full dataframe
-  group_by(`Disp Health Board Name`, `Paid Date`) %>%
-  summarise(`Claim PD Number of Paid Items` = sum(`Claim PD Number of Paid Items`),
-            `Claim PD Paid GIC excl. BB` = sum(`Claim PD Paid GIC excl. BB`)) %>%
-  ungroup()
+  # group_by(`Disp Health Board Name`, `Paid Date`) %>%
+  # summarise(`Claim PD Number of Paid Items` = sum(`Claim PD Number of Paid Items`),
+  #           `Claim PD Paid GIC excl. BB` = sum(`Claim PD Paid GIC excl. BB`)) %>%
+  # ungroup()
 
 rm(data)
  
@@ -110,6 +113,22 @@ board_data$`Cost per item`[board_data$`Cost per item` %in% c("", NA, NaN)] <- 0 
 ## 2.2 Create healthboard and date variables ----
 healthboards <- unique(board_data$`Disp Health Board Name`) 
 dates <- unique(board_data$`Paid Date`)
+
+# 3. Investigating time-series
+data <- board_data %>%
+  filter(`Disp Health Board Name` == 'SCOTLAND') %>%
+  select(`Paid Date`, `Claim PD Number of Paid Items`)
+
+ts_data <- ts(data$`Claim PD Number of Paid Items`, start = c(2010, 4), frequency = 12)
+
+autoplot(ts_data) +
+  labs(title = "Scotland: number of paid prescription items",
+       y="Number of Paid Items")
+
+as_tsibble(ts_data) %>%
+  gg_tsdisplay(difference(value, 12),
+               plot_type='partial', lag=36) +
+  labs(title="Seasonally differenced", y="")
 
 # 3. Run forecast ----
 
@@ -175,10 +194,10 @@ if (working_day == TRUE) {
      '2026-01-01', '2026-01-02', '2026-04-03', '2026-05-04', '2026-05-25', '2026-08-03', '2026-11-30', '2026-12-25', '2026-12-28',
      "2027-01-01"
      # add in holidays for further years below
-  
+
    )
   
-   saveRDS(holidays, '/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast/shiny/data/holidays.rds')
+   saveRDS(holidays, 'shiny/data/holidays.rds')
   
   # Create a calendar excluding weekends and holidays
   Scotland <- create.calendar(name = "Scotland", weekdays = c("saturday", "sunday"), holidays = holidays)
@@ -203,7 +222,7 @@ if (working_day == TRUE) {
      Business_Days = business_days
    )
   
-   saveRDS(result, "/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast/shiny/forecasts/data/business_days_lookup.rds")
+   saveRDS(result, "shiny/forecasts/data/business_days_lookup.rds")
   
   result <- read_rds(glue("{path}/shiny/data/business_days_lookup.rds"))
 
@@ -340,7 +359,7 @@ if (forecast_evaluation == TRUE) {
     suffix = 'cpi'
   }
   
-  saveRDS(forecast, paste0(glue('{path}/shiny/forecasts/sarima/output/', historical_data,' months/SARIMA-', latest_forecast_date, '-', suffix, '-', historical_data, 'months.rds')))
+  saveRDS(forecast, paste0(glue('{path}/shiny/forecasts/sarima/output/', historical_data,' months/run ', run_number,'/SARIMA-', latest_forecast_date, '-', suffix, '-', historical_data, 'months.rds')))
 
 }
 
@@ -355,13 +374,13 @@ if (forecast_results == TRUE) {
     )
   
   num_of_months = c(
-    12,
-    24,
-    36
+    12#,
+    #24,
+    #36
   )
   
-  run_number = 1
-  
+  # Already defined above but uncomment if needed
+  #run_number = 2
 
   results_list <- list()
   
@@ -402,7 +421,7 @@ if (forecast_results == TRUE) {
   years <- unique(combined_results$year)
   columns <- unique(combined_results$type)
   
-  saveRDS(combined_results, glue('{path}/shiny/forecasts/sarima/output/forecast-performance-', max(combined_results$forecast_date), '.rds'))
+  saveRDS(combined_results, glue('{path}/shiny/forecasts/sarima/output/', historical_data,' months/run ', run_number,'/forecast-performance-', max(combined_results$forecast_date), '.rds'))
   
   combined_forecast <- data.frame()
   #boards <- unique(results_list$board)
@@ -526,12 +545,14 @@ if (forecast_results == TRUE) {
                                    Type == 'Cost per item' ~ mean(Lower_95)),
               Upper_95 = case_when(Type %in% c('Claim PD Number of Paid Items', 'Claim PD Paid GIC excl. BB') ~ sum(Upper_95),
                                    Type == 'Cost per item' ~ mean(Upper_95))) %>%
-    mutate(Board = 'SCOTLAND agg') %>%
+    mutate(Board = 'SCOTLAND') %>%
     unique() %>%
     select(Board, Date, Forecast, Lower_80, Upper_80, Lower_95, Upper_95, Type, Year, Historical_Data, F_Horizon, Arima_Error)
 
   # Re-join with forecast
   combined_forecast <- combined_forecast %>%
+    # This will need to be changed
+    filter(!(Board == 'SCOTLAND')) %>%
     rbind(scotland_agg_forecast)
 
   # Create dataframe with each combination of variables to join to observed data (will allow for plotting)
@@ -553,3 +574,8 @@ if (forecast_results == TRUE) {
   saveRDS(result, glue('{path}/shiny/forecasts/sarima/output/forecast-run-', run_number, '.rds'))
   
 }
+
+end <- Sys.time()
+diff <- end - start
+
+saveRDS(diff, 'shiny/forecasts/sarima/time.rds')
