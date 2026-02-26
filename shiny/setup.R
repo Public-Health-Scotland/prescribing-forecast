@@ -28,6 +28,7 @@ library(tidyverse)
 library(lubridate)
 library(forecast)
 library(ggplot2)
+library(ggtime)
 library(plotly)
 library(openxlsx)
 library(readxl)
@@ -37,6 +38,9 @@ library(devtools)
 library(urca)
 library(phsmethods)
 library(tibble)
+library(tsibble)
+library(feasts)
+library(GGally)
 
 # PHS styling packages ----
 library(phsstyles)
@@ -196,6 +200,32 @@ combined_data_wd <- combined_data_wd %>%
 #   select(-c(Historical_Data, Year, F_Horizon, Arima_Error))
 
 sarima_v2.1_performance  <- readRDS('shiny/forecasts/sarima/output/forecast-performance-2026-01-14.rds')
+
+############## EDA ############## 
+eda_data <- read.csv('shiny/forecasts/data/Historical Data.csv', check.names = FALSE) %>%
+  mutate(`Paid Date` = dmy(`Paid Date`)) %>%
+  filter(`Paid Date` > '2009-12-31') 
+
+eda_data$`Claim PD Paid GIC excl. BB` <- as.double(gsub(",", "", eda_data$`Claim PD Paid GIC excl. BB`))
+
+scotland_data <- eda_data %>%
+  group_by(`Paid Date`) %>%
+  summarise(across(where(is.numeric), ~sum(.x, na.rm = TRUE))) %>%
+  mutate(`Disp Health Board Name` = 'SCOTLAND') %>%
+  select(`Disp Health Board Name`, everything())
+
+eda_data <- eda_data %>%
+  bind_rows(scotland_data) %>%
+  mutate(`Cost per item` = `Claim PD Paid GIC excl. BB` / `Claim PD Number of Paid Items`) %>%
+  # double check data is arranged by board and date 
+  arrange(`Disp Health Board Name`, `Paid Date`)
+
+rm(scotland_data)
+
+# eda_data_tsibble <- eda_data %>%
+#   # create new column for index
+#   mutate(month_new = yearmonth(`Paid Date`)) %>%
+#   tsibble(index = 'month_new')
 
 ############## Variables ############## 
 healthboards <- unique(forecast_items$Board)

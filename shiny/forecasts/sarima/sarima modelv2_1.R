@@ -49,8 +49,8 @@ setwd('/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-
 
 ## 1.3. Logical variables to assist in job run
 working_day = FALSE
-forecast_evaluation = TRUE
-forecast_results = FALSE
+forecast_evaluation = FALSE
+forecast_results = TRUE
 
 # These are the columns that will be forecasted
 # WARNING: The more columns included, the longer the runtime will be. It is recommended that this script is set to run as a Workbench job.
