@@ -114,12 +114,12 @@ items_tsibble <- items %>%
 items_sp <- items_tsibble %>%
   gg_season(`Claim PD Number of Paid Items`, labels = 'both')
 
-ggsave('shiny/forecasts/eda/images/items_season_plot_12_2025.png')
+#ggsave('shiny/forecasts/eda/images/items_season_plot_12_2025.png')
 
 items_ssp <- items_tsibble %>%
   gg_subseries(`Claim PD Number of Paid Items`)
 
-ggsave('shiny/forecasts/eda/images/items_subseries_season_plot_12_2025.png')
+#ggsave('shiny/forecasts/eda/images/items_subseries_season_plot_12_2025.png')
 
 gic_tsibble <- gic %>%
   mutate(Month = yearmonth(`Paid Date`)) %>%
@@ -128,12 +128,12 @@ gic_tsibble <- gic %>%
 gic_sp <- gic_tsibble %>%
   gg_season(`Claim PD Paid GIC excl. BB`, labels = 'both')
 
-ggsave('shiny/forecasts/eda/images/gic_season_plot_12_2025.png')
+#ggsave('shiny/forecasts/eda/images/gic_season_plot_12_2025.png')
 
 gic_ssp <- gic_tsibble %>%
   gg_subseries(`Claim PD Paid GIC excl. BB`)
 
-ggsave('shiny/forecasts/eda/images/gic_subseries_season_plot_12_2025.png')
+#ggsave('shiny/forecasts/eda/images/gic_subseries_season_plot_12_2025.png')
 
 cpi_tsibble <- cpi %>%
   mutate(Month = yearmonth(`Paid Date`)) %>%
@@ -142,12 +142,12 @@ cpi_tsibble <- cpi %>%
 cpi_sp <- cpi_tsibble %>%
   gg_season(`Cost per item`, labels = 'both')
 
-ggsave('shiny/forecasts/eda/images/cpi_season_plot_12_2025.png')
+#ggsave('shiny/forecasts/eda/images/cpi_season_plot_12_2025.png')
 
 cpi_ssp <- cpi_tsibble %>%
   gg_subseries(`Cost per item`)
 
-ggsave('shiny/forecasts/eda/images/cpi_subseries_season_plot_12_2025.png')
+#ggsave('shiny/forecasts/eda/images/cpi_subseries_season_plot_12_2025.png')
 
 ## 3.3. Scatterplots ----
 
@@ -177,9 +177,23 @@ cpi_lag <- scotland_data %>%
   tsibble(index = 'month_new', frequency = 'month') %>%
   ggtime::gg_lag(`Cost per item`, geom = "point")
 
+## 3.5. Autocorrelation plots ----
+items_autocorr <- scotland_data %>%
+  mutate(month_new = yearmonth(`Paid Date`)) %>%
+  tsibble(index = 'month_new', frequency = 'month') %>%
+  ACF(`Claim PD Number of Paid Items`) %>%
+  autoplot()
+  
+gic_autocorr <- scotland_data %>%
+  mutate(month_new = yearmonth(`Paid Date`)) %>%
+  tsibble(index = 'month_new', frequency = 'month') %>%
+  ACF(`Claim PD Paid GIC excl. BB`) %>%
+  autoplot()
 
-
-
-
+cpi_autocorr <- scotland_data %>%
+  mutate(month_new = yearmonth(`Paid Date`)) %>%
+  tsibble(index = 'month_new', frequency = 'month') %>%
+  ACF(`Cost per item`) %>%
+  autoplot()
 
 
