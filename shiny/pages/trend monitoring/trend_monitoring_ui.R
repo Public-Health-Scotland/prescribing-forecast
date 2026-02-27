@@ -13,7 +13,7 @@ tagList(
   ),
   
   fluidRow(
-    column(4, selectizeInput("monitoring_board", label = 'Choose board:', choices = healthboards))
+    column(4, selectizeInput("monitoring_board", label = 'Choose board:', choices = healthboards, selected = 'SCOTLAND'))
   ),
   
   # fluidRow(
