@@ -84,7 +84,7 @@ bttn_remove <- list(
 # LOAD IN DATA HERE ----
 
 ############## Forecast ############## 
-forecast <- readRDS('shiny/forecasts/sarima/output/forecast-run-2.rds') %>%
+forecast <- readRDS('shiny/forecasts/sarima/output/forecast-run-3.rds') %>%
   filter(Historical_Data == "12 months of historical data",
          Year == 2025,
          F_Horizon == 48,
@@ -101,6 +101,22 @@ forecast_items <- forecast %>%
   mutate(YoY = (Measure - lag(Measure, 12)) / lag(Measure, 12) * 100) %>%
   ungroup()
 
+forecast_items_quarterly <- forecast %>%
+  mutate(FY = extract_fin_year(Date),
+         quarter_date = qtr_end(Date)) %>%
+  filter(Type == 'Claim PD Number of Paid Items') %>%
+  group_by(Board, quarter_date, FY, Type) %>%
+  mutate(Date = max(Date, na.rm = TRUE)) %>%
+  ungroup() %>%
+  group_by(Board, Date, FY, Type) %>%
+  summarise(Measure = sum(Measure),
+            Forecast = sum(Forecast),
+            Lower_80 = sum(Lower_80),
+            Upper_80 = sum(Upper_80),
+            Lower_95 = sum(Lower_95),
+            Upper_95 = sum(Upper_95)) %>%
+  ungroup()
+
 ## Number of Paid Items per working day forecast
 forecast_items_wd <- forecast %>%
   mutate(FY = extract_fin_year(Date)) %>%
@@ -112,34 +128,57 @@ forecast_items_wd <- forecast %>%
 ############## Cost Data ############## 
 
 ## Calculate GIC for post-training data
-gic <- forecast %>%
-  mutate(FY = extract_fin_year(Date)) %>%
-  filter(Type %in% c('Claim PD Number of Paid Items', 'Cost per item'),
-         Date > '2024-06-30') %>%
-  group_by(Board, Date, FY) %>%
-  summarise(Measure = prod(Measure), # multiplies number of paid items and cost per item to get gross ingredient cost
-            Forecast = prod(Forecast),
-            Lower_80 = prod(Lower_80),
-            Upper_80 = prod(Upper_80),
-            Lower_95 = prod(Lower_95),
-            Upper_95 = prod(Upper_95)) %>%
-  ungroup()
+# gic <- forecast %>%
+#   mutate(FY = extract_fin_year(Date)) %>%
+#   filter(Type %in% c('Claim PD Number of Paid Items', 'Cost per item'),
+#          Date > '2024-06-30') %>%
+#   group_by(Board, Date, FY) %>%
+#   summarise(Measure = prod(Measure), # multiplies number of paid items and cost per item to get gross ingredient cost
+#             Forecast = prod(Forecast),
+#             Lower_80 = prod(Lower_80),
+#             Upper_80 = prod(Upper_80),
+#             Lower_95 = prod(Lower_95),
+#             Upper_95 = prod(Upper_95)) %>%
+#   ungroup()
+# 
+# ## Final GIC dataframe
+# forecast_gic <- forecast %>%
+#   mutate(FY = extract_fin_year(Date)) %>%
+#   filter(Type %in% c('Claim PD Number of Paid Items', 'Cost per item'),
+#          Date < '2024-07-01') %>%
+#   pivot_wider(names_from = 'Type',
+#               values_from = 'Measure') %>%
+#   mutate(Measure = `Claim PD Number of Paid Items` * `Cost per item`) %>%
+#   select(Board, Date, FY, Measure, everything()) %>%
+#   select(-`Claim PD Number of Paid Items`, -`Cost per item`) %>%
+#   bind_rows(gic) %>%
+#   arrange(Date) %>%
+#   group_by(Board) %>%
+#   mutate(YoY = (Measure - lag(Measure, 12)) / lag(Measure, 12) * 100) %>%
+#   ungroup() 
 
-## Final GIC dataframe
 forecast_gic <- forecast %>%
   mutate(FY = extract_fin_year(Date)) %>%
-  filter(Type %in% c('Claim PD Number of Paid Items', 'Cost per item'),
-         Date < '2024-07-01') %>%
-  pivot_wider(names_from = 'Type',
-              values_from = 'Measure') %>%
-  mutate(Measure = `Claim PD Number of Paid Items` * `Cost per item`) %>%
-  select(Board, Date, FY, Measure, everything()) %>%
-  select(-`Claim PD Number of Paid Items`, -`Cost per item`) %>%
-  bind_rows(gic) %>%
-  arrange(Date) %>%
+  filter(Type == 'Claim PD Paid GIC excl. BB') %>%
   group_by(Board) %>%
   mutate(YoY = (Measure - lag(Measure, 12)) / lag(Measure, 12) * 100) %>%
-  ungroup() 
+  ungroup()
+
+forecast_gic_quarterly <- forecast %>%
+  mutate(FY = extract_fin_year(Date),
+         quarter_date = qtr_end(Date)) %>%
+  filter(Type == 'Claim PD Paid GIC excl. BB') %>%
+  group_by(Board, quarter_date, FY, Type) %>%
+  mutate(Date = max(Date, na.rm = TRUE)) %>%
+  ungroup() %>%
+  group_by(Board, Date, FY, Type) %>%
+  summarise(Measure = sum(Measure),
+            Forecast = sum(Forecast),
+            Lower_80 = sum(Lower_80),
+            Upper_80 = sum(Upper_80),
+            Lower_95 = sum(Lower_95),
+            Upper_95 = sum(Upper_95)) %>%
+  ungroup()
 
 ## Cost per Item
 forecast_cpi <- forecast %>%
@@ -195,7 +234,7 @@ combined_data_wd <- combined_data_wd %>%
 #          Arima_Error == FALSE) %>%
 #   select(-c(Historical_Data, Year, F_Horizon, Arima_Error))
 
-sarima_v2.1_performance  <- readRDS('shiny/forecasts/sarima/output/forecast-performance-2026-01-14.rds')
+sarima_v2.1_performance  <- readRDS('shiny/forecasts/sarima/output/12 months/run 3/forecast-performance-2026-02-26.rds')
 
 ############## Variables ############## 
 healthboards <- unique(forecast_items$Board)

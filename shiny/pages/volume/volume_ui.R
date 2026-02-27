@@ -50,17 +50,32 @@ tagList(
               
               fluidRow(
                 p(linebreaks(0.5)),
-                column(4, selectizeInput("pi_view", label = 'Choose view:', choices = c('Forecast',
-                                                                                        'Year-on-year change (%)')))
+                column(6, selectizeInput("pi_view", label = 'Choose view:', choices = c('Forecast',
+                                                                                        'Year-on-year change (%)')),
+                       ),
+                conditionalPanel(condition = "input.pi_view == 'Forecast'",
+                                 column(6, selectizeInput("m_q_view", label = 'Aggregation level:', choices = c('Monthly',
+                                                                                                                'Quarterly'))))
               ),
               
               conditionalPanel(condition = "input.pi_view == 'Forecast'", 
                                fluidRow(
-                                 column(10, plotlyOutput("items_plot"))
+                                 conditionalPanel(condition = "input.m_q_view == 'Monthly'",
+                                                  column(10, plotlyOutput("items_plot"))
+                                 ),
+                                 conditionalPanel(condition = "input.m_q_view == 'Quarterly'",
+                                                  column(10, plotlyOutput("items_quarterly_plot"))
+                                 )
                                ),
                                fluidRow(
-                                 downloadButton("downloadData_items", "Download Data", style = "width:200px;")
-                               )
+                                 conditionalPanel(condition = "input.m_q_view == 'Monthly'",
+                                                  downloadButton("downloadData_items", "Download Data", style = "width:200px;")),
+
+                                 conditionalPanel(condition = "input.m_q_view == 'Quarterly'",
+                                                  downloadButton("downloadData_items_quarterly", "Download Data", style = "width:200px;"))
+                                 )
+                                
+                              
                                ),
               
               conditionalPanel(condition = "input.pi_view == 'Year-on-year change (%)'", 
