@@ -190,7 +190,7 @@ output$model_updates <-  renderUI({
       
       p("See below details of each model version throughout development."),
       
-      tags$b("Next refresh: February 2026"),
+      tags$b("Next scheduled refresh: May 2026"),
       
       p(linebreaks(1)),
       
