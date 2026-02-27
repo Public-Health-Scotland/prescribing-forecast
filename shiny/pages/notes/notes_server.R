@@ -79,6 +79,31 @@ output$using_dashboard <-  renderUI({
   
 }) # renderUI
 
+## Dashboard Updates ####
+
+## Text explaining tab ####
+output$dashboard_updates <- renderUI({
+  
+  fluidRow(
+    
+    h1("Latest updates to dashboard"),
+    
+    p("This tab will detail any changes made to dashboard functionality and UI (if any), at each refresh."),
+    
+    ## Add new section each time if anything to update on
+    
+    tags$b("February 2026:"),
+    p(linebreaks(0.5)),
+    tags$ul(
+      style = "margin-left: 20px; list-style-type: disc;",
+      tags$li("New tab added for listing updates to dashboard"),
+      tags$li("Quarterly forecast aggregation added for items and GIC"),
+      tags$li("Download data file names now including board name")
+    )    
+  )
+  
+})
+
 ## Model Updates ####
 
 ## Text for each model version ####
