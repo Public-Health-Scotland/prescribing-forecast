@@ -49,6 +49,15 @@ output$using_dashboard <-  renderUI({
         )
       ),
       
+      p("Forecasts for ", strong("Number of Paid Items and Gross Ingredient Cost"), "will also feature a filter where users can choose to aggregate the forecasts to either monthly or quarterly."),
+      
+      p(
+        tags$img(
+          src = "images/Aggregation.png",
+          style = "width: 250px"
+        )
+      ),
+      
       h2("Chart interaction"),
       
       p("Each graph within this dashboard has been created using Plotly, which contains a number of different opportunities for users to interact."),
