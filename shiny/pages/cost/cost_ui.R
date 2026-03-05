@@ -14,7 +14,7 @@ tagList(
   ),
   
   fluidRow(
-    column(4, selectizeInput("cost_board", label = 'Choose board:', choices = healthboards))
+    column(4, selectizeInput("cost_board", label = 'Choose board:', choices = healthboards, selected = 'SCOTLAND'))
   ),
   
   #fluidRow(p(linebreaks(1))),
@@ -25,20 +25,30 @@ tagList(
               
                fluidRow(
                  p(linebreaks(0.5)),
-                 column(4, selectizeInput("gic_view", label = 'Choose view:', choices = c('Forecast',
-                                                                                         'Year-on-year change (%)')))#,
-                 #column(4, checkboxInput("gic_advanced", 'Tick for advanced controls', value = FALSE))
+                 column(6, selectizeInput("gic_view", label = 'Choose view:', choices = c('Forecast',
+                                                                                         'Year-on-year change (%)'))),
+                 conditionalPanel(condition = "input.gic_view == 'Forecast'",
+                                  column(6, selectizeInput("m_q_gic_view", label = 'Aggregation level:', choices = c('Monthly',
+                                                                                                                     'Quarterly'))))
                ),
 
-              #uiOutput("checkbox_gic"),
-              
+
               conditionalPanel(condition = "input.gic_view == 'Forecast'",
                                fluidRow(
-                                 column(10, plotlyOutput("gic_plot"))
+                                 conditionalPanel(condition = "input.m_q_gic_view == 'Monthly'",
+                                                  column(10, plotlyOutput("gic_plot"))
                                  ),
-                               fluidRow(
-                                 downloadButton("downloadData_gic", "Download Data", style = "width:200px;")
+                                 conditionalPanel(condition = "input.m_q_gic_view == 'Quarterly'",
+                                                  column(10, plotlyOutput("gic_quarterly_plot"))
                                  )
+                               ),
+                               fluidRow(
+                                 conditionalPanel(condition = "input.m_q_gic_view == 'Monthly'",
+                                                  downloadButton("downloadData_gic", "Download Data", style = "width:200px;")),
+                                 
+                                 conditionalPanel(condition = "input.m_q_gic_view == 'Quarterly'",
+                                                  downloadButton("downloadData_gic_quarterly", "Download Data", style = "width:200px;"))
+                               )
                                ),
               
               conditionalPanel(condition = "input.gic_view == 'Year-on-year change (%)'",

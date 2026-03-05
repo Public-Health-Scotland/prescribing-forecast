@@ -26,40 +26,22 @@ palette <- phs_colour_values
 
 gic_plot_data <- reactive({
   
-  data <- forecast %>%
-    filter(Board == input$cost_board,
-           Type == "Claim PD Paid GIC excl. BB")
-  
-#   if (input$gic_advanced == TRUE) {
-#     data <- data %>%
-#       filter(Year == input$gic_year,
-#              F_Horizon == as.numeric(input$gic_historical) + 36)
-#   } else if (input$gic_advanced == FALSE) {
-#     data <- data %>%
-#       filter(Year == 2025,
-#              F_Horizon == 48) %>%
-#       select(-Year, -Historical_Data, -F_Horizon, -Arima_Error)
-#   }
+  data <- forecast_gic %>%
+    filter(Board == input$cost_board)
    
  })
 
+gic_quarterly_plot_data <- reactive({
+  
+  data <- forecast_gic_quarterly %>%
+    filter(Board == input$cost_board)
+  
+})
+
 cpi_plot_data <- reactive({
   
-  data <- forecast %>%
-    filter(Board == input$cost_board,
-           Type == "Cost per item")
-
-  
-  # if (input$gic_advanced == TRUE) {
-  #   data <- data %>%
-  #     filter(Year == input$gic_year,
-  #            F_Horizon == input$gic_historical + 36)
-  # } else if (input$gic_advanced == FALSE) {
-  #   data <- data %>%
-  #     filter(Year == 2025,
-  #            F_Horizon == 48) %>%
-  #     select(-Year, -Historical_Data, -F_Horizon, -Arima_Error)
-  # }
+  data <- forecast_cpi %>%
+    filter(Board == input$cost_board)
   
 })
 
@@ -124,6 +106,70 @@ output$gic_plot <- renderPlotly({
            yaxis = list(title = '<b>Gross Ingredient Cost (£)</b>'),
            font = list(family = 'Arial'))
 
+  plot
+  
+})
+
+output$gic_quarterly_plot <- renderPlotly({
+  
+  plot <- plot_ly(
+    data = gic_quarterly_plot_data(),
+    x = ~Date,
+    y = ~Measure,
+    name = 'Actual data',
+    type = 'scatter',
+    mode = 'lines') %>%
+    add_trace(y = ~Forecast,
+              name = 'Forecast',
+              line = list(dash = 'dot')) %>%
+    add_ribbons(#data = items_plot_data(),
+      #x = ~Date,
+      y = ~Forecast,
+      ymin = ~Lower_95, ymax = ~Upper_95,
+      fillcolor = 'rgba(255, 0, 0, 0.2)',
+      line = list(color = 'rgba(255, 0, 0, 0)'),
+      name = '95% CI') %>%
+    add_ribbons(#data = items_plot_data(),
+      #x = ~Date,
+      y = ~Forecast,
+      ymin = ~Lower_80, ymax = ~Upper_80,
+      line = list(color = 'rgba(0,0,0,0)'),
+      fillcolor = 'rgba(100,100,200,0.2)',
+      name = '80% CI') %>%
+    # Update title and axes
+    layout(title = paste('Forecasting quarterly gross ingredient cost in', input$cost_board),
+           xaxis = list(title = '<b>Quarter End Date</b>',
+                        rangeslider = list(visible = TRUE,          # Enable the range slider
+                                           bgcolor = phs_colours('phs-magenta-30'),   # Background color of the range slider
+                                           bordercolor = phs_colours('phs-magenta'),    # Border color
+                                           borderwidth = 2)#,
+                        # rangeselector = list(
+                        #   buttons = list(
+                        #     list(
+                        #       count = 6,
+                        #       label = "6 mo",
+                        #       step = "month",
+                        #       stepmode = "backward"),
+                        #     list(
+                        #       count = 1,
+                        #       label = "1 yr",
+                        #       step = "year",
+                        #       stepmode = "backward"),
+                        #     list(
+                        #       count = 2,
+                        #       label = "2 yr",
+                        #       step = "year",
+                        #       stepmode = "backward"),
+                        #     list(
+                        #       count = 1,
+                        #       label = "YTD",
+                        #       step = "year",
+                        #       stepmode = "todate"),
+                        #     list(step = "all")))
+           ),
+           yaxis = list(title = '<b>Gross Ingredient Cost (£)</b>'),
+           font = list(family = 'Arial'))
+  
   plot
   
 })
@@ -473,16 +519,25 @@ output$change_cpi <- renderPlotly({
 ### Download handler
 output$downloadData_gic <- downloadHandler(
   filename = function() {
-    paste("GrossIngredientCost-", Sys.Date(), ".csv", sep = "")
+    paste(input$cost_board, "-MonthlyGIC-", Sys.Date(), ".csv", sep = "")
   },
   content = function(file) {
     write.csv(gic_plot_data(), file, row.names = FALSE)
   }
 )
 
+output$downloadData_gic_quarterly <- downloadHandler(
+  filename = function() {
+    paste(input$cost_board, "-QuarterlyGIC-", Sys.Date(), ".csv", sep = "")
+  },
+  content = function(file) {
+    write.csv(gic_quarterly_plot_data(), file, row.names = FALSE)
+  }
+)
+
 output$downloadData_cpi <- downloadHandler(
   filename = function() {
-    paste("CostPerItem-", Sys.Date(), ".csv", sep = "")
+    paste(input$cost_board, "-CostPerItem-", Sys.Date(), ".csv", sep = "")
   },
   content = function(file) {
     write.csv(cpi_plot_data(), file, row.names = FALSE)

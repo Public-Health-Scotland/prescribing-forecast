@@ -12,6 +12,14 @@ items_plot_data <- reactive({
   
 })
 
+items_quarterly_plot_data <- reactive({
+  
+  data <- forecast_items_quarterly %>%
+    filter(Board == input$final_board)
+  
+})
+
+
 items_wd_plot_data <- reactive({
   
   data <- forecast_items_wd %>%
@@ -118,6 +126,70 @@ output$items_plot <- renderPlotly({
            yaxis = list(title = '<b>Number of Paid Items</b>'),
            font = list(family = 'Arial'))
 
+  plot
+  
+})
+
+output$items_quarterly_plot <- renderPlotly({
+  
+  plot <- plot_ly(
+    data = items_quarterly_plot_data(),
+    x = ~Date,
+    y = ~Measure,
+    name = 'Actual data',
+    type = 'scatter',
+    mode = 'lines') %>%
+    add_trace(y = ~Forecast,
+              name = 'Forecast',
+              line = list(dash = 'dot')) %>%
+    add_ribbons(#data = items_plot_data(),
+      #x = ~Date,
+      y = ~Forecast,
+      ymin = ~Lower_95, ymax = ~Upper_95,
+      fillcolor = 'rgba(255, 0, 0, 0.2)',
+      line = list(color = 'rgba(255, 0, 0, 0)'),
+      name = '95% CI') %>%
+    add_ribbons(#data = items_plot_data(),
+      #x = ~Date,
+      y = ~Forecast,
+      ymin = ~Lower_80, ymax = ~Upper_80,
+      line = list(color = 'rgba(0,0,0,0)'),
+      fillcolor = 'rgba(100,100,200,0.2)',
+      name = '80% CI') %>%
+    # Update title and axes
+    layout(title = paste('Forecasting quarterly number of paid items in', input$final_board),
+           xaxis = list(title = '<b>Quarter End Date</b>',
+                        rangeslider = list(visible = TRUE,          # Enable the range slider
+                                           bgcolor = phs_colours('phs-magenta-30'),   # Background color of the range slider
+                                           bordercolor = phs_colours('phs-magenta'),    # Border color
+                                           borderwidth = 2)#, 
+                        # rangeselector = list(
+                        #   buttons = list(
+                        #     list(
+                        #       count = 6,
+                        #       label = "6 mo",
+                        #       step = "month",
+                        #       stepmode = "backward"),
+                        #     list(
+                        #       count = 1,
+                        #       label = "1 yr",
+                        #       step = "year",
+                        #       stepmode = "backward"),
+                        #     list(
+                        #       count = 2,
+                        #       label = "2 yr",
+                        #       step = "year",
+                        #       stepmode = "backward"),
+                        #     list(
+                        #       count = 1,
+                        #       label = "YTD",
+                        #       step = "year",
+                        #       stepmode = "todate"),
+                        #     list(step = "all")))
+           ),
+           yaxis = list(title = '<b>Number of Paid Items</b>'),
+           font = list(family = 'Arial'))
+  
   plot
   
 })
@@ -293,16 +365,25 @@ output$measure_error <- renderPlotly({
 ### Download handler
 output$downloadData_items <- downloadHandler(
   filename = function() {
-    paste("NumberOfPaidItems-", Sys.Date(), ".csv", sep = "")
+    paste(input$final_board, "-MonthlyPaidItems-", Sys.Date(), ".csv", sep = "")
   },
   content = function(file) {
     write.csv(items_plot_data(), file, row.names = FALSE)
   }
 )
 
+output$downloadData_items_quarterly <- downloadHandler(
+  filename = function() {
+    paste(input$final_board, "-QuarterlyPaidItems-", Sys.Date(), ".csv", sep = "")
+  },
+  content = function(file) {
+    write.csv(items_quarterly_plot_data(), file, row.names = FALSE)
+  }
+)
+
 output$downloadData_items_wd <- downloadHandler(
   filename = function() {
-    paste("NumberOfPaidItemsWD-", Sys.Date(), ".csv", sep = "")
+    paste(input$final_board, "-PaidItemsWD-", Sys.Date(), ".csv", sep = "")
   },
   content = function(file) {
     write.csv(items_wd_plot_data(), file, row.names = FALSE)
@@ -311,7 +392,7 @@ output$downloadData_items_wd <- downloadHandler(
 
 output$downloadData_yearly_change <- downloadHandler(
   filename = function() {
-    paste("YearlyChangeWD-", Sys.Date(), ".csv", sep = "")
+    paste(input$final_board, "-YearlyChangeWD-", Sys.Date(), ".csv", sep = "")
   },
   content = function(file) {
     write.csv(yearly_change_wd(), file, row.names = FALSE)
@@ -320,7 +401,7 @@ output$downloadData_yearly_change <- downloadHandler(
 
 output$downloadData_avg_error <- downloadHandler(
   filename = function() {
-    paste("AverageError-", Sys.Date(), ".csv", sep = "")
+    paste(input$final_board, "-AverageError-", Sys.Date(), ".csv", sep = "")
   },
   content = function(file) {
     write.csv(he_ts, file, row.names = FALSE)
@@ -329,7 +410,7 @@ output$downloadData_avg_error <- downloadHandler(
 
 output$downloadData_cpi <- downloadHandler(
   filename = function() {
-    paste("CostPerItem-", Sys.Date(), ".csv", sep = "")
+    paste(input$final_board, "-CostPerItem-", Sys.Date(), ".csv", sep = "")
   },
   content = function(file) {
     write.csv(pp_wd(), file, row.names = FALSE)

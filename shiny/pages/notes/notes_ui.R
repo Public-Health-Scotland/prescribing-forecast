@@ -21,7 +21,7 @@ page_fillable(
       shinyWidgets::radioGroupButtons(
         inputId = "intro_select",
         label = NULL,
-        choices = c("General Information","Using this dashboard","Model updates"),
+        choices = c("General Information","Using this dashboard","Dashboard updates","Model updates"),
                     #,"Contact"),
         status = "primary",
         direction = "vertical",
@@ -40,6 +40,12 @@ page_fillable(
       conditionalPanel(
         condition = "input.intro_select == 'Using this dashboard'",
         uiOutput('using_dashboard')
+      ),
+      
+      # Dashboard functionality and UI updates
+      conditionalPanel(
+        condition = "input.intro_select == 'Dashboard updates'",
+        uiOutput('dashboard_updates')
       ),
       
       # General information

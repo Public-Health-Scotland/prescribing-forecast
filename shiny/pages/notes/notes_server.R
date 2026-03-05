@@ -49,6 +49,15 @@ output$using_dashboard <-  renderUI({
         )
       ),
       
+      p("Forecasts for ", strong("Number of Paid Items and Gross Ingredient Cost"), "will also feature a filter where users can choose to aggregate the forecasts to either monthly or quarterly."),
+      
+      p(
+        tags$img(
+          src = "images/Aggregation.png",
+          style = "width: 250px"
+        )
+      ),
+      
       h2("Chart interaction"),
       
       p("Each graph within this dashboard has been created using Plotly, which contains a number of different opportunities for users to interact."),
@@ -78,6 +87,31 @@ output$using_dashboard <-  renderUI({
     ) #fluidrow
   
 }) # renderUI
+
+## Dashboard Updates ####
+
+## Text explaining tab ####
+output$dashboard_updates <- renderUI({
+  
+  fluidRow(
+    
+    h1("Latest updates to dashboard"),
+    
+    p("This tab will detail any changes made to dashboard functionality and UI (if any), at each refresh."),
+    
+    ## Add new section each time if anything to update on
+    
+    tags$b("February 2026:"),
+    p(linebreaks(0.5)),
+    tags$ul(
+      style = "margin-left: 20px; list-style-type: disc;",
+      tags$li("New tab added for listing updates to dashboard"),
+      tags$li("Quarterly forecast aggregation added for items and GIC"),
+      tags$li("Download data file names now including board name")
+    )    
+  )
+  
+})
 
 ## Model Updates ####
 
@@ -156,7 +190,7 @@ output$model_updates <-  renderUI({
       
       p("See below details of each model version throughout development."),
       
-      tags$b("Next refresh: February 2026"),
+      tags$b("Next scheduled refresh: May 2026"),
       
       p(linebreaks(1)),
       

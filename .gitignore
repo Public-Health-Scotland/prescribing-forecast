@@ -25,6 +25,9 @@ deployment/
 *.xlsx
 *.pdf
 
+# Write to excel file
+/shiny/forecasts/sarima/output/write to excel.R
+
 # History files
 .Rhistory
 .Rapp.history
