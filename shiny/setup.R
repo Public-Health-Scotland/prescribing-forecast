@@ -266,6 +266,54 @@ rm(scotland_data)
 #   mutate(month_new = yearmonth(`Paid Date`)) %>%
 #   tsibble(index = 'month_new')
 
+############## per 1,000 list size (weighted and non-weighted) ############## 
+list_sizes <- read.xlsx('shiny/data/population/List Sizes.xlsx') %>%
+  mutate(quarter_date = as.Date(quarter_date, origin = "1899-12-30")) %>%
+  dplyr::rename(`Paid Date` = quarter_date,
+                `Disp Health Board Name` = Board) %>%
+  select(`Disp Health Board Name`, everything()) %>%
+  left_join(eda_data, by = c('Disp Health Board Name', 'Paid Date')) %>%
+  select(`Disp Health Board Name`, `Paid Date`, `Claim PD Number of Paid Items`, `Claim PD Paid GIC excl. BB`, `Cost per item`, everything()) %>%
+  mutate(
+    Items_1000_LS = `Claim PD Number of Paid Items` / `Non-Weighted` * 1000,
+    Items_1000_Weighted_LS = `Claim PD Number of Paid Items` / Weighted * 1000,
+    GIC_1000_LS = `Claim PD Paid GIC excl. BB` / `Non-Weighted` * 1000,
+    GIC_1000_Weighted_LS = `Claim PD Paid GIC excl. BB` / Weighted * 1000,
+    CPI_1000_LS = `Cost per item` / `Non-Weighted` * 1000,
+    CPI_1000_Weighted_LS = `Cost per item` / Weighted * 1000
+  )
+
+plot <- plot_ly(
+  data = list_sizes,
+  x = ~`Paid Date`,
+  y = ~Items_1000_LS,
+  color = ~`Disp Health Board Name`,
+  type = 'scatter',
+  mode = 'lines'
+)
+
+plot <- plot_ly(
+  data = list_sizes %>% filter(!(`Disp Health Board Name` == "SCOTLAND")),
+  x = ~`Paid Date`,
+  y = ~Items_1000_Weighted_LS,
+  color = ~`Disp Health Board Name`,
+  type = 'scatter',
+  mode = 'lines'
+)
+
+# Add a bold version of one specific line (e.g., 'NHS Greater Glasgow & Clyde')
+plot <- plot %>%
+  add_trace(
+    data = subset(list_sizes, `Disp Health Board Name` == "SCOTLAND"),
+    x = ~`Paid Date`,
+    y = ~Items_1000_Weighted_LS,
+    type = 'scatter',
+    mode = 'lines',
+    line = list(width = 4,
+                color = "#3F3685"),      # ← Bold effect
+    name = "SCOTLAND"
+  )
+
 ############## Variables ############## 
 healthboards <- unique(forecast_items$Board)
 financial_years <- unique(forecast_items$FY)
