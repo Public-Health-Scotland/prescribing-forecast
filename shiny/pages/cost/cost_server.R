@@ -73,7 +73,7 @@ output$gic_plot <- renderPlotly({
       fillcolor = 'rgba(100,100,200,0.2)',
       name = '80% CI') %>%
     # Update title and axes
-    layout(title = paste('Forecasting monthly Gross Ingredient Cost in', input$cost_board),
+    layout(title = paste('Forecasting monthly Gross Ingredient Cost (£) in', input$cost_board),
            xaxis = list(title = '<b>Date</b>',
                         rangeslider = list(visible = TRUE,          # Enable the range slider
                                            bgcolor = phs_colours('phs-magenta-30'),   # Background color of the range slider
@@ -137,7 +137,7 @@ output$gic_quarterly_plot <- renderPlotly({
       fillcolor = 'rgba(100,100,200,0.2)',
       name = '80% CI') %>%
     # Update title and axes
-    layout(title = paste('Forecasting quarterly Gross Ingredient Cost in', input$cost_board),
+    layout(title = paste('Forecasting quarterly Gross Ingredient Cost (£) in', input$cost_board),
            xaxis = list(title = '<b>Quarter End Date</b>',
                         rangeslider = list(visible = TRUE,          # Enable the range slider
                                            bgcolor = phs_colours('phs-magenta-30'),   # Background color of the range slider
@@ -255,7 +255,7 @@ output$change_gic <- renderPlotly({
     mode = 'lines',
     fill = 'tozeroy'
   ) %>%
-    layout(title = paste('Year-on-year percentage change in Gross Ingredient Cost in', input$final_board),
+    layout(title = paste('Year-on-year percentage change in Gross Ingredient Cost (£) in', input$final_board),
            xaxis = list(title = 'Month'),
            yaxis = list(title = 'Percentage change (%)'),
            font = list(family = 'Arial'))
