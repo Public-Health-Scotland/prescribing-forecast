@@ -81,12 +81,17 @@ bttn_remove <- list(
 
 '%!in%' <- function(x,y)!('%in%'(x,y))
 
+# Key variables to load files
+run_number = 4
+latest_year = 2025
+forecast_performance_date = '2026-04-23' # in the format YYYY-MM-DD
+
 # LOAD IN DATA HERE ----
 
 ############## Forecast ############## 
-forecast <- readRDS('shiny/forecasts/sarima/output/forecast-run-3.rds') %>%
+forecast <- readRDS(paste0('shiny/forecasts/sarima/output/forecast-run-', run_number,'.rds')) %>%
   filter(Historical_Data == "12 months of historical data",
-         Year == 2025,
+         Year == latest_year,
          F_Horizon == 48,
          Arima_Error == FALSE) %>%
   select(-c(Historical_Data, Year, F_Horizon, Arima_Error))
@@ -126,36 +131,6 @@ forecast_items_wd <- forecast %>%
   ungroup()
 
 ############## Cost Data ############## 
-
-## Calculate GIC for post-training data
-# gic <- forecast %>%
-#   mutate(FY = extract_fin_year(Date)) %>%
-#   filter(Type %in% c('Claim PD Number of Paid Items', 'Cost per item'),
-#          Date > '2024-06-30') %>%
-#   group_by(Board, Date, FY) %>%
-#   summarise(Measure = prod(Measure), # multiplies number of paid items and cost per item to get gross ingredient cost
-#             Forecast = prod(Forecast),
-#             Lower_80 = prod(Lower_80),
-#             Upper_80 = prod(Upper_80),
-#             Lower_95 = prod(Lower_95),
-#             Upper_95 = prod(Upper_95)) %>%
-#   ungroup()
-# 
-# ## Final GIC dataframe
-# forecast_gic <- forecast %>%
-#   mutate(FY = extract_fin_year(Date)) %>%
-#   filter(Type %in% c('Claim PD Number of Paid Items', 'Cost per item'),
-#          Date < '2024-07-01') %>%
-#   pivot_wider(names_from = 'Type',
-#               values_from = 'Measure') %>%
-#   mutate(Measure = `Claim PD Number of Paid Items` * `Cost per item`) %>%
-#   select(Board, Date, FY, Measure, everything()) %>%
-#   select(-`Claim PD Number of Paid Items`, -`Cost per item`) %>%
-#   bind_rows(gic) %>%
-#   arrange(Date) %>%
-#   group_by(Board) %>%
-#   mutate(YoY = (Measure - lag(Measure, 12)) / lag(Measure, 12) * 100) %>%
-#   ungroup() 
 
 forecast_gic <- forecast %>%
   mutate(FY = extract_fin_year(Date)) %>%
@@ -227,26 +202,11 @@ combined_data_wd <- combined_data_wd %>%
 #mutate(`Number of items per prescription per working day` = `Number of Paid Items per working day` / `No of Prescriptions per working day`)
 
 ## 1.4. SARIMA model v2.1 - run 1 ----
-# sarima_v2.1 <- readRDS('shiny/forecasts/sarima/output/forecast-run-1.rds') %>%
-#   filter(Historical_Data == "12 months of historical data",
-#          Year == 2025,
-#          F_Horizon == 48,
-#          Arima_Error == FALSE) %>%
-#   select(-c(Historical_Data, Year, F_Horizon, Arima_Error))
-
-sarima_v2.1_performance  <- readRDS('shiny/forecasts/sarima/output/12 months/run 3/forecast-performance-2026-02-26.rds')
+sarima_v2.1_performance  <- readRDS(paste0('shiny/forecasts/sarima/output/12 months/run ', run_number, '/forecast-performance-', forecast_performance_date, '.rds'))
 
 ############## Variables ############## 
 healthboards <- unique(forecast_items$Board)
 financial_years <- unique(forecast_items$FY)
-
-# # LOGIN----
-# # get protection status for live app
-# Protected <- readRDS("data/Protect.rds")
-# 
-# # Set password if required for deployed app
-# # Whether to password protect the app - set in deployment script
-# password_protect <- Protected
 
 # Create a custom theme
 my_theme <- bs_theme(
