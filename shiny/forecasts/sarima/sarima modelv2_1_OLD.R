@@ -63,7 +63,7 @@ columns_to_forecast = c(
   )
 
 # This variable decides what years to cap the time series at upon each run
-# Time series begins in 2011, we need 75% of time series to be training data, and 25% to be test data
+# Time series begins in 2011
 
 # Month of the year that time series is capped on will be guided by the last month of data loaded into PIS
 
@@ -359,6 +359,7 @@ if (forecast_evaluation == TRUE) {
     suffix = 'cpi'
   }
   
+  # change this to fit glue syntax
   saveRDS(forecast, paste0(glue('{path}/shiny/forecasts/sarima/output/', historical_data,' months/run ', run_number,'/SARIMA-', latest_forecast_date, '-', suffix, '-', historical_data, 'months.rds')))
 
 }

@@ -5,7 +5,7 @@ tagList(
   ## Heading and introductory text
   fluidRow(
     h1("Cost forecasting"),
-    p("Forecasting gross ingredient cost and cost per item using SARIMA - refer to 'Model details' tab for more information.")#,
+    p("Forecasting Gross Ingredient Cost (£) and cost per item using SARIMA - refer to 'Model details' tab for more information.")#,
     
     #actionButton('cost_notes', 'Click here for key notes'),
     #p(linebreaks(0.5))
