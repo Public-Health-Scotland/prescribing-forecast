@@ -28,6 +28,7 @@ library(tidyverse)
 library(lubridate)
 library(forecast)
 library(ggplot2)
+library(ggtime)
 library(plotly)
 library(openxlsx)
 library(readxl)
@@ -37,6 +38,9 @@ library(devtools)
 library(urca)
 library(phsmethods)
 library(tibble)
+library(tsibble)
+library(feasts)
+library(GGally)
 
 # PHS styling packages ----
 library(phsstyles)
@@ -203,6 +207,80 @@ combined_data_wd <- combined_data_wd %>%
 
 ## 1.4. SARIMA model v2.1 - run 1 ----
 sarima_v2.1_performance  <- readRDS(paste0('shiny/forecasts/sarima/output/12 months/run ', run_number, '/forecast-performance-', forecast_performance_date, '.rds'))
+
+############## EDA ############## 
+eda_data <- read.csv('shiny/forecasts/data/Historical Data.csv', check.names = FALSE) %>%
+  mutate(`Paid Date` = dmy(`Paid Date`)) %>%
+  filter(`Paid Date` > '2009-12-31') 
+
+eda_data$`Claim PD Paid GIC excl. BB` <- as.double(gsub(",", "", eda_data$`Claim PD Paid GIC excl. BB`))
+
+scotland_data <- eda_data %>%
+  group_by(`Paid Date`) %>%
+  summarise(across(where(is.numeric), ~sum(.x, na.rm = TRUE))) %>%
+  mutate(`Disp Health Board Name` = 'SCOTLAND') %>%
+  select(`Disp Health Board Name`, everything())
+
+eda_data <- eda_data %>%
+  bind_rows(scotland_data) %>%
+  mutate(`Cost per item` = `Claim PD Paid GIC excl. BB` / `Claim PD Number of Paid Items`) %>%
+  # double check data is arranged by board and date 
+  arrange(`Disp Health Board Name`, `Paid Date`)
+
+rm(scotland_data)
+
+# eda_data_tsibble <- eda_data %>%
+#   # create new column for index
+#   mutate(month_new = yearmonth(`Paid Date`)) %>%
+#   tsibble(index = 'month_new')
+
+############## per 1,000 list size (weighted and non-weighted) ############## 
+list_sizes <- read.xlsx('shiny/data/population/List Sizes.xlsx') %>%
+  mutate(quarter_date = as.Date(quarter_date, origin = "1899-12-30")) %>%
+  dplyr::rename(`Paid Date` = quarter_date,
+                `Disp Health Board Name` = Board) %>%
+  select(`Disp Health Board Name`, everything()) %>%
+  left_join(eda_data, by = c('Disp Health Board Name', 'Paid Date')) %>%
+  select(`Disp Health Board Name`, `Paid Date`, `Claim PD Number of Paid Items`, `Claim PD Paid GIC excl. BB`, `Cost per item`, everything()) %>%
+  mutate(
+    Items_1000_LS = `Claim PD Number of Paid Items` / `Non-Weighted` * 1000,
+    Items_1000_Weighted_LS = `Claim PD Number of Paid Items` / Weighted * 1000,
+    GIC_1000_LS = `Claim PD Paid GIC excl. BB` / `Non-Weighted` * 1000,
+    GIC_1000_Weighted_LS = `Claim PD Paid GIC excl. BB` / Weighted * 1000,
+    CPI_1000_LS = `Cost per item` / `Non-Weighted` * 1000,
+    CPI_1000_Weighted_LS = `Cost per item` / Weighted * 1000
+  )
+
+plot <- plot_ly(
+  data = list_sizes,
+  x = ~`Paid Date`,
+  y = ~Items_1000_LS,
+  color = ~`Disp Health Board Name`,
+  type = 'scatter',
+  mode = 'lines'
+)
+
+plot <- plot_ly(
+  data = list_sizes %>% filter(!(`Disp Health Board Name` == "SCOTLAND")),
+  x = ~`Paid Date`,
+  y = ~Items_1000_Weighted_LS,
+  color = ~`Disp Health Board Name`,
+  type = 'scatter',
+  mode = 'lines'
+)
+
+# Add a bold version of one specific line (e.g., 'NHS Greater Glasgow & Clyde')
+plot <- plot %>%
+  add_trace(
+    data = subset(list_sizes, `Disp Health Board Name` == "SCOTLAND"),
+    x = ~`Paid Date`,
+    y = ~Items_1000_Weighted_LS,
+    type = 'scatter',
+    mode = 'lines',
+    line = list(width = 4,
+                color = "#3F3685"),      # ← Bold effect
+    name = "SCOTLAND"
+  )
 
 ############## Variables ############## 
 healthboards <- unique(forecast_items$Board)

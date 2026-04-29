@@ -88,6 +88,14 @@ ui <- secure_app(
                  
                  source(file.path("shiny/pages/feedback/feedback_ui.R"), local = TRUE)$value
                  
+        ),
+        
+        tabPanel(title = "EDA",
+                 icon = icon_no_warning_fn("clipboard-question"),
+                 value = "EDA",
+                 
+                 source(file.path("shiny/pages/eda/eda_ui.R"), local = TRUE)$value
+                 
         )
         
       )

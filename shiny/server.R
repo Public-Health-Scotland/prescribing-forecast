@@ -39,6 +39,8 @@ server <- function(input, output, session) {
   source(file.path("shiny/pages/volume/volume_server.R"), local = TRUE)$value
   source(file.path("shiny/pages/cost/cost_server.R"), local = TRUE)$value
   source(file.path("shiny/pages/trend monitoring/trend_monitoring_server.R"), local = TRUE)$value
+  source(file.path("shiny/pages/eda/eda_server.R"), local = TRUE)$value
+  
   
 }
 
