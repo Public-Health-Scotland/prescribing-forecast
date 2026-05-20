@@ -14,7 +14,7 @@ tagList(
   ),
   
   fluidRow(
-    column(4, selectizeInput("final_board", label = 'Choose board:', choices = healthboards, selected = 'SCOTLAND'))
+    column(4, selectizeInput("items_board", label = 'Choose board:', choices = healthboards, selected = 'SCOTLAND'))
   ),
   
   # fluidRow(
