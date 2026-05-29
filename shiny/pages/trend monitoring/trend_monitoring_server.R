@@ -7,7 +7,7 @@ palette <- phs_colour_values
 pp_wd <- reactive({
   
   df <- combined_data_wd %>%
-    filter(`Disp Health Board Name` == input$monitoring_board)
+    filter(`Presc Health Board Name` == input$monitoring_board)
   
 })
 
@@ -16,10 +16,10 @@ df <- combined_data_wd %>%
 
 plot <- plot_ly(
   data = df,
-  x = ~`Disp Health Board Name`,
+  x = ~`Presc Health Board Name`,
   y = ~`Avg No of Items per prescription`,
-  color = ~`Disp Health Board Name`,
-  colors = setNames(palette, levels(df$`Disp Health Board Name`)),
+  color = ~`Presc Health Board Name`,
+  colors = setNames(palette, levels(df$`Presc Health Board Name`)),
   type = 'bar') %>%
   layout(barmode = 'group') 
 

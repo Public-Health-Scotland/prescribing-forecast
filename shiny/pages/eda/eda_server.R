@@ -8,7 +8,7 @@ eda_data_tsibble <- reactive({
   
   df <- eda_data %>%
     mutate(month_new = yearmonth(`Paid Date`)) %>%
-    filter(`Disp Health Board Name` == input$eda_board) %>%
+    filter(`Presc Health Board Name` == input$eda_board) %>%
     # create new column for index
     tsibble(index = 'month_new') 
   

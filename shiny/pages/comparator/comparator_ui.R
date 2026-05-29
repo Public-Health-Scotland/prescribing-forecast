@@ -5,10 +5,11 @@ tagList(
   ## Heading and introductory text
   fluidRow(
     h1("Forecast comparison between two boards"),
-    p("Users can use the dropdowns below to compare the forecasts of two different boards.")#,
+    p("Use the dropdowns below to compare the forecasts of two different boards for a forecast and aggregation level of your choice."),
+    tags$b("Quarterly aggregation is not available for the cost per item forecast."),
     
     #actionButton('notes', 'Click here for key notes'),
-    #p(linebreaks(0.5))
+    p(linebreaks(0.5))
 
     
   ),
@@ -109,7 +110,11 @@ tagList(
                  plotlyOutput("cpi_quarterly_plot_second_board")
                )
              
-        )
+        ),
+        
+        p(linebreaks(0.5)),
+        tags$b("If you wish to download the forecast data, please go to the relevant tab.")
+        
       )
     )
   )

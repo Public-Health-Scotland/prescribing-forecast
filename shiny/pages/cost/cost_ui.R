@@ -5,11 +5,15 @@ tagList(
   ## Heading and introductory text
   fluidRow(
     h1("Cost forecasting"),
-    p("Forecasting Gross Ingredient Cost (£) and cost per item using SARIMA - refer to 'Model details' tab for more information.")#,
+    p("Forecasting Gross Ingredient Cost (£), phasings and cost per item using SARIMA - refer to 'Model details' tab for more information."),
     
     #actionButton('cost_notes', 'Click here for key notes'),
-    #p(linebreaks(0.5))
-
+    #p(linebreaks(0.5)),
+    tags$b("Quarterly aggregation is not available for the cost per item forecast."),
+    p(linebreaks(0.5)),
+    tags$b("Please also note that the phasings forecast does not detail any confidence intervals: as this value is calculated directly from the gross ingredient cost forecast we cannot derive and provide reliable confidence intervals here."),
+    p(linebreaks(0.5))
+    
     
   ),
   
@@ -23,14 +27,29 @@ tagList(
     
     nav_panel('Gross Ingredient Cost (£)',
               
-               fluidRow(
-                 p(linebreaks(0.5)),
-                 column(6, selectizeInput("gic_view", label = 'Choose view:', choices = c('Forecast',
-                                                                                         'Year-on-year change (%)'))),
-                 conditionalPanel(condition = "input.gic_view == 'Forecast'",
-                                  column(6, selectizeInput("m_q_gic_view", label = 'Aggregation level:', choices = c('Monthly',
-                                                                                                                     'Quarterly'))))
-               ),
+               # fluidRow(
+               #   p(linebreaks(0.5)),
+               #   column(6, selectizeInput("gic_view", label = 'Choose view:', choices = c('Forecast',
+               #                                                                           'Year-on-year change (%)'))),
+               #   conditionalPanel(condition = "input.gic_view == 'Forecast'",
+               #                    column(6, selectizeInput("m_q_gic_view", label = 'Aggregation level:', choices = c('Monthly',
+               #                                                                                                       'Quarterly'))))
+               # ),
+              
+              fluidRow(
+                p(linebreaks(0.5)),
+                column(3,
+                       selectizeInput("gic_view", "Choose view:",
+                                      choices = c("Forecast", "Year-on-year change (%)"))
+                ),
+                column(3,
+                       conditionalPanel(
+                         "input.gic_view == 'Forecast'",
+                         selectizeInput("m_q_gic_view", "Aggregation level:",
+                                        choices = c("Monthly", "Quarterly"))
+                       )
+                )
+              ),
 
 
               conditionalPanel(condition = "input.gic_view == 'Forecast'",
@@ -89,7 +108,21 @@ tagList(
               )
               
               
-    )#,
+    ),
+    
+    
+    nav_panel('Phasings',
+              
+              fluidRow(
+                p(linebreaks(0.5)),
+                column(10, plotlyOutput("phasings_plot"))
+              ),
+              
+              fluidRow(
+                downloadButton("downloadData_phasings", "Download Data", style = "width:200px;")
+              )
+              
+    )
     
     )
   

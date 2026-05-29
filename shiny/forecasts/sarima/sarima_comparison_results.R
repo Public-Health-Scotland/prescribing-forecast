@@ -49,17 +49,17 @@ setwd('/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-
 
 ## 1.3. Logical variables to assist in job run
 working_day = FALSE
-forecast_evaluation = FALSE
-forecast_results = TRUE
+forecast_evaluation = TRUE
+forecast_results = FALSE
 
 # These are the columns that will be forecasted
 # WARNING: The more columns included, the longer the runtime will be. It is recommended that this script is set to run as a Workbench job.
 
 # Comment columns out as required
 columns_to_forecast = c(
-  #'Claim PD Number of Paid Items'#,
+  'Claim PD Number of Paid Items'#,
   #'Claim PD Paid GIC excl. BB'#,
-  'Cost per item'
+  #'Cost per item'
 )
 
 # This variable decides what years to cap the time series at upon each run
@@ -70,14 +70,20 @@ columns_to_forecast = c(
 # For example, running the script to forecast for the four years following 2023 would result in the time series 
 # being capped at August 2020 if that was the last month of data loaded into PIS at the time of running. This ensures
 # that roughly 25% of the time series is included in the test data and that said data covers a whole number of years (3 in this example).
-years_to_run <- c(2025)
+years_to_run <- c(2026)
 
 historical_data = 12 # months
 
-run_number = 3
+run_number = 4
+
+healthboards <- c("NHS AYRSHIRE & ARRAN", "NHS BORDERS", "NHS DUMFRIES & GALLOWAY", "NHS FIFE",
+                  "NHS FORTH VALLEY", "NHS GRAMPIAN", "NHS GREATER GLASGOW & CLYDE", "NHS HIGHLAND", 
+                  "NHS LANARKSHIRE", "NHS LOTHIAN", "NHS TAYSIDE", "NHS WESTERN ISLES", "NHS ORKNEY", 
+                  "NHS SHETLAND", "SCOTLAND")
 
 # 2. Read in data and some processing ----
-data <- read.csv(paste0(glue('shiny/forecasts/data/Historical Data.csv')), check.names = FALSE)
+data <- read.csv(paste0(glue('shiny/forecasts/data/Historical Data.csv')), check.names = FALSE) %>%
+  filter(`Presc Health Board Name` %in% healthboards)
 
 data$`Claim PD Paid GIC excl. BB` <- as.double(gsub(",", "", data$`Claim PD Paid GIC excl. BB`))
 #data$`Paid BNF Chapter Description`[data$`Paid BNF Chapter Description` %in% c("", NA)] <- "BLANK CHAPTER" # assign NAs to any blank values

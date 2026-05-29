@@ -87,8 +87,8 @@ bttn_remove <- list(
 
 # Key variables to load files
 run_number = 4
-latest_year = 2025
-forecast_performance_date = '2026-04-23' # in the format YYYY-MM-DD
+latest_year = 2026
+forecast_performance_date = '2026-05-24' # in the format YYYY-MM-DD
 
 # LOAD IN DATA HERE ----
 
@@ -167,17 +167,40 @@ forecast_cpi <- forecast %>%
   mutate(YoY = (Measure - lag(Measure, 12)) / lag(Measure, 12) * 100) %>%
   ungroup() 
 
+## Phasings - uncomment this code once full financial year of data is in
+# forecast_phasings <- forecast_gic %>%
+#   filter(Date > "2010-03-31") %>%
+#   group_by(Board, FY, Type) %>%
+#   mutate(FY_Spend = sum(Measure),
+#          FY_Spend_Forecast = sum(Forecast)) %>%
+#   ungroup() %>%
+#   mutate(Phasings_Obs = Measure / FY_Spend * 100,
+#          Phasings_Forecast = Forecast / FY_Spend_Forecast * 100) %>%
+#   select(-Measure, -Forecast, -YoY, -Lower_80, -Lower_95, -Upper_80, -Upper_95) %>%
+#   dplyr::rename(Measure = Phasings_Obs,
+#                 Forecast = Phasings_Forecast) %>%
+#   select(Board, Date, Type, Measure, Forecast, everything()) %>%
+#   mutate(Type = "Phasings")
+# 
+# ### Save file for 26/27
+# write.xlsx(forecast_phasings, 'shiny/data/2627 Phasings.xlsx')
+
+### Phasings - leave uncommented once new file has been saved
+forecast_phasings <- read_excel('shiny/data/2627 Phasings.xlsx')
+
 ############## Trend Monitoring Data ############## 
 
 ## List all Excel files in the directory
 file_list <- list.files(path = "shiny/data/Items per prescription/", pattern = "\\.xlsx$", full.names = TRUE)
 
 ## Read all files into a list of data frames
-data_list <- map(file_list, ~read.xlsx(.x, startRow = 4, cols = 2:7, sep.names = ' '))
+data_list <- map(file_list, ~read.xlsx(.x, startRow = 2, cols = 2:7, sep.names = ' '))
 
 ## Combine all data frames into one
 combined_data <- bind_rows(data_list) %>%
-  mutate(`Paid Date` = as.Date(`Paid Date`, origin = "1899-12-30")) %>%
+  unique() %>%
+  mutate(`Paid Date` = as.Date(`Paid Date`, origin = "1899-12-30"),
+         `Avg No of Items per prescription` = `Claim PD Number of Paid Items` / `No of Prescriptions`) %>%
   arrange(`Paid Date`)
 
 scotland_data <- combined_data %>%
@@ -185,9 +208,9 @@ scotland_data <- combined_data %>%
   summarise(`Claim PD Number of Paid Items` = sum(`Claim PD Number of Paid Items`),
             `No of Prescriptions` = sum(`No of Prescriptions`)) %>%
   ungroup() %>%
-  mutate(`Disp Health Board Name` = 'SCOTLAND',
+  mutate(`Presc Health Board Name` = 'SCOTLAND',
          `Avg No of Items per prescription` = `Claim PD Number of Paid Items` / `No of Prescriptions`) %>%
-  select(`Disp Health Board Name`, everything())
+  select(`Presc Health Board Name`, everything())
 
 combined_data <- combined_data %>%
   rbind(scotland_data) %>%
@@ -205,8 +228,8 @@ combined_data_wd <- combined_data_wd %>%
     `No of Prescriptions per working day` = `No of Prescriptions` / Business_Days) #%>%
 #mutate(`Number of items per prescription per working day` = `Number of Paid Items per working day` / `No of Prescriptions per working day`)
 
-## 1.4. SARIMA model v2.1 - run 1 ----
-sarima_v2.1_performance  <- readRDS(paste0('shiny/forecasts/sarima/output/12 months/run ', run_number, '/forecast-performance-', forecast_performance_date, '.rds'))
+############## Performance ############## 
+forecast_performance <- read_excel('shiny/forecasts/sarima/output/forecast-performance.xlsx')
 
 ############## EDA ############## 
 eda_data <- read.csv('shiny/forecasts/data/Historical Data.csv', check.names = FALSE) %>%
@@ -218,14 +241,14 @@ eda_data$`Claim PD Paid GIC excl. BB` <- as.double(gsub(",", "", eda_data$`Claim
 scotland_data <- eda_data %>%
   group_by(`Paid Date`) %>%
   summarise(across(where(is.numeric), ~sum(.x, na.rm = TRUE))) %>%
-  mutate(`Disp Health Board Name` = 'SCOTLAND') %>%
-  select(`Disp Health Board Name`, everything())
+  mutate(`Presc Health Board Name` = 'SCOTLAND') %>%
+  select(`Presc Health Board Name`, everything())
 
 eda_data <- eda_data %>%
   bind_rows(scotland_data) %>%
   mutate(`Cost per item` = `Claim PD Paid GIC excl. BB` / `Claim PD Number of Paid Items`) %>%
   # double check data is arranged by board and date 
-  arrange(`Disp Health Board Name`, `Paid Date`)
+  arrange(`Presc Health Board Name`, `Paid Date`)
 
 rm(scotland_data)
 
@@ -238,10 +261,10 @@ rm(scotland_data)
 list_sizes <- read.xlsx('shiny/data/population/List Sizes.xlsx') %>%
   mutate(quarter_date = as.Date(quarter_date, origin = "1899-12-30")) %>%
   dplyr::rename(`Paid Date` = quarter_date,
-                `Disp Health Board Name` = Board) %>%
-  select(`Disp Health Board Name`, everything()) %>%
-  left_join(eda_data, by = c('Disp Health Board Name', 'Paid Date')) %>%
-  select(`Disp Health Board Name`, `Paid Date`, `Claim PD Number of Paid Items`, `Claim PD Paid GIC excl. BB`, `Cost per item`, everything()) %>%
+                `Presc Health Board Name` = Board) %>%
+  select(`Presc Health Board Name`, everything()) %>%
+  left_join(eda_data, by = c('Presc Health Board Name', 'Paid Date')) %>%
+  select(`Presc Health Board Name`, `Paid Date`, `Claim PD Number of Paid Items`, `Claim PD Paid GIC excl. BB`, `Cost per item`, everything()) %>%
   mutate(
     Items_1000_LS = `Claim PD Number of Paid Items` / `Non-Weighted` * 1000,
     Items_1000_Weighted_LS = `Claim PD Number of Paid Items` / Weighted * 1000,
@@ -255,16 +278,16 @@ plot <- plot_ly(
   data = list_sizes,
   x = ~`Paid Date`,
   y = ~Items_1000_LS,
-  color = ~`Disp Health Board Name`,
+  color = ~`Presc Health Board Name`,
   type = 'scatter',
   mode = 'lines'
 )
 
 plot <- plot_ly(
-  data = list_sizes %>% filter(!(`Disp Health Board Name` == "SCOTLAND")),
+  data = list_sizes %>% filter(!(`Presc Health Board Name` == "SCOTLAND")),
   x = ~`Paid Date`,
   y = ~Items_1000_Weighted_LS,
-  color = ~`Disp Health Board Name`,
+  color = ~`Presc Health Board Name`,
   type = 'scatter',
   mode = 'lines'
 )
@@ -272,7 +295,7 @@ plot <- plot_ly(
 # Add a bold version of one specific line (e.g., 'NHS Greater Glasgow & Clyde')
 plot <- plot %>%
   add_trace(
-    data = subset(list_sizes, `Disp Health Board Name` == "SCOTLAND"),
+    data = subset(list_sizes, `Presc Health Board Name` == "SCOTLAND"),
     x = ~`Paid Date`,
     y = ~Items_1000_Weighted_LS,
     type = 'scatter',

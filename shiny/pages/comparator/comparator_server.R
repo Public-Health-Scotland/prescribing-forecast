@@ -137,3 +137,13 @@ output$cpi_quarterly_plot_second_board <- make_chart(cpi_quarterly_second_board_
                                                      "quarterly",
                                                      reactive(input$second_board))
 
+## 1.4. Download data buttons
+# output$downloadData_comparator1 <- downloadHandler(
+#   filename = function() {
+#     paste(input$first_board, "-", input$comparator_measure, "-", Sys.Date(), ".csv", sep = "")
+#   },
+#   content = function(file) {
+#     write.csv(phasings_plot_data(), file, row.names = FALSE)
+#   }
+# )
+

@@ -24,6 +24,7 @@ deployment/
 *.rds
 *.xlsx
 *.pdf
+*.docx
 
 # Write to excel file
 /shiny/forecasts/sarima/output/write to excel.R
