@@ -6,14 +6,14 @@ output$info <-  renderUI({
   div(
     fluidRow(
       
-      h1("PHS Pharmacy Forecasting Model"),
+      h1("PHS Prescribing Forecasting Model"),
       
-      p("Welcome to PHS' very own pharmacy forecasting model!"),
+      p("Welcome to PHS' very own prescribing forecasting model!"),
       p("This new and improved output was developed following a number of short life working group meetings, which were used to gather feedback on the previous version of the output on things like model accuracy and stakeholder suitability, and to then gather stakeholder requirements to ensure the work is tailored to those who require its information."),
       p("The decision was taken to use R to build the new version of the forecasting model, as this would provide the tools to gain much more control and flexibility in what can be applied to the model compared to Tableau."),
       p("Predictions seen in this dashboard have been generated using a SARIMA (Seasonal Auto-Regressive Moving Average) model. Further information can be found by navigating to the 'Model details' tab across the top of the page."),
       p("Please refer to the 'Feedback' tab and fill in the embedded Microsoft Form if you run into any problems, if you have any further questions around how to navigate the dashboard or if you have any useful feedback and/or suggestions that could be incorporated here."),
-      p("Forecasts were last generated in January 2026, with updates scheduled to happen quarterly following the most recent data load e.g. February 2026 update will include quarter ending December 2025."),
+      p("Forecasts were last generated in May 2026, with updates scheduled to happen quarterly following the most recent data load e.g. February 2026 update will include quarter ending December 2025."),
       tags$p(tags$i("This piece of work has been devised, created, developed and iteratively refined to inform an ongoing disseration project as Glasgow Caledonian University. Your involvement in this piece of work as an end-user is greatly appreciated and will go a long way to making this project a success -", tags$b("thank you!")))
       
     ) #fluidrow
@@ -55,6 +55,15 @@ output$using_dashboard <-  renderUI({
         tags$img(
           src = "images/Aggregation.png",
           style = "width: 250px"
+        )
+      ),
+      
+      p("The forecast", strong("Comparator"), "tab features four filters: the first dropdown to filter data for the chart on the left, the second for the chart on the right, the third for choosing the forecast you're interested in and the fourth for the level of aggregation you require."),
+      
+      p(
+        tags$img(
+          src = "images/Comparator.png",
+          style = "width: 1400px"
         )
       ),
       
@@ -108,7 +117,18 @@ output$dashboard_updates <- renderUI({
       tags$li("New tab added for listing updates to dashboard"),
       tags$li("Quarterly forecast aggregation added for items and GIC"),
       tags$li("Download data file names now including board name")
-    )    
+    ),
+    
+    ## Add new section each time if anything to update on
+    
+    tags$b("May 2026:"),
+    p(linebreaks(0.5)),
+    tags$ul(
+      style = "margin-left: 20px; list-style-type: disc;",
+      tags$li("New tab added for comparing forecasts of two boards"),
+      tags$li("Phasings value added back in based on gross ingredient forecast"),
+      tags$li("Links and tabs updated to remove mention of 'pharmacy' and replace with 'prescribing'")
+    )        
   )
   
 })
@@ -165,7 +185,7 @@ model2_1 <- div(
   
   fluidRow(
     
-    tags$b("Last updated: November 2025"),
+    tags$b("Last updated: May 2026"),
     tags$b("Platform: R"),
     
     p(linebreaks(0.5)),
@@ -176,7 +196,8 @@ model2_1 <- div(
       style = "margin-left: 20px; list-style-type: disc;",
       tags$li("Time series data now starting from 2011 (free prescriptions)"),
       tags$li("Cost per item forecast now included"),
-      tags$li("Feedback form added to dashboard")
+      tags$li("Feedback form added to dashboard"),
+      tags$li("Prescribing Health Board used instead of Dispensing Health Board in data extracts")
       )
   )
 )
@@ -190,7 +211,7 @@ output$model_updates <-  renderUI({
       
       p("See below details of each model version throughout development."),
       
-      tags$b("Next scheduled refresh: May 2026"),
+      tags$b("Next scheduled refresh: August/September 2026"),
       
       p(linebreaks(1)),
       
@@ -211,7 +232,7 @@ output$model_updates <-  renderUI({
       nav_panel(
         "PharmPredict 2",
         fluidRow(
-          "PharmaPredict 2 represents the latest developments into the pharmacy forecast, first developed in September 2025 following extensive consultations with a dedicated short life working group."
+          "PharmaPredict 2 represents the latest developments into the prescribing forecast, first developed in September 2025 following extensive consultations with a dedicated short life working group."
         ),
         layout_column_wrap(
           width = 1/2,

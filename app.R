@@ -16,7 +16,9 @@ ui <- #secure_app(
   
   #theme = my_theme,
   
+  
   fluidPage(
+    shinyjs::useShinyjs(),
     lang = "en",
     tagList(
       # Specify most recent fontawesome library - change version as needed
@@ -66,6 +68,14 @@ ui <- #secure_app(
                  value = "cost",
                  
                  source(file.path("shiny/pages/cost/cost_ui.R"), local = TRUE)$value
+                 
+        ),
+        
+        tabPanel(title = "Comparator",
+                 icon = icon_no_warning_fn("code-compare"),
+                 value = "comparator",
+                 
+                 source(file.path("shiny/pages/comparator/comparator_ui.R"), local = TRUE)$value
                  
         ),
         
@@ -134,6 +144,7 @@ server <- function(input, output, session) {
   #source(file.path("shiny/pages/spotlight/spotlight_server.R"), local = TRUE)$value
   source(file.path("shiny/pages/volume/volume_server.R"), local = TRUE)$value
   source(file.path("shiny/pages/cost/cost_server.R"), local = TRUE)$value
+  source(file.path("shiny/pages/comparator/comparator_server.R"), local = TRUE)$value
   source(file.path("shiny/pages/trend monitoring/trend_monitoring_server.R"), local = TRUE)$value
   source(file.path("shiny/pages/eda/eda_server.R"), local = TRUE)$value
   

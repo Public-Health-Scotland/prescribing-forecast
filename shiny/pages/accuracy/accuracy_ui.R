@@ -10,8 +10,7 @@ tagList(
   ),
   
   fluidRow(
-    column(4, selectizeInput("performance_measure", "Choose measure:", 
-                             choices = c))
+    column(12, DT::DTOutput('performance_table', width = '80%', height = '600px'))
   )
   
 )

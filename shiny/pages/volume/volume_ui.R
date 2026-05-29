@@ -14,7 +14,7 @@ tagList(
   ),
   
   fluidRow(
-    column(4, selectizeInput("final_board", label = 'Choose board:', choices = healthboards, selected = 'SCOTLAND'))
+    column(4, selectizeInput("items_board", label = 'Choose board:', choices = healthboards, selected = 'SCOTLAND'))
   ),
   
   # fluidRow(
@@ -48,14 +48,29 @@ tagList(
     
     nav_panel('Number of Paid Items',
               
+              # fluidRow(
+              #   p(linebreaks(0.5)),
+              #   column(6, selectizeInput("pi_view", label = 'Choose view:', choices = c('Forecast',
+              #                                                                           'Year-on-year change (%)')),
+              #          ),
+              #   conditionalPanel(condition = "input.pi_view == 'Forecast'",
+              #                    column(6, selectizeInput("m_q_view", label = 'Aggregation level:', choices = c('Monthly',
+              #                                                                                                   'Quarterly'))))
+              # ),
+              
               fluidRow(
                 p(linebreaks(0.5)),
-                column(6, selectizeInput("pi_view", label = 'Choose view:', choices = c('Forecast',
-                                                                                        'Year-on-year change (%)')),
-                       ),
-                conditionalPanel(condition = "input.pi_view == 'Forecast'",
-                                 column(6, selectizeInput("m_q_view", label = 'Aggregation level:', choices = c('Monthly',
-                                                                                                                'Quarterly'))))
+                column(3,
+                       selectizeInput("pi_view", "Choose view:",
+                                      choices = c("Forecast", "Year-on-year change (%)"))
+                ),
+                column(3,
+                       conditionalPanel(
+                         "input.pi_view == 'Forecast'",
+                         selectizeInput("m_q_view", "Aggregation level:",
+                                        choices = c("Monthly", "Quarterly"))
+                       )
+                )
               ),
               
               conditionalPanel(condition = "input.pi_view == 'Forecast'", 
