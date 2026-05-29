@@ -69,11 +69,6 @@ tagList(
                conditionalPanel(
                  condition = "input.comparator_measure == 'Cost per item' && input.comparator_agg == 'Monthly'",
                  plotlyOutput("cpi_plot_first_board")
-               ),
-               
-               conditionalPanel(
-                 condition = "input.comparator_measure == 'Cost per item' && input.comparator_agg == 'Quarterly'",
-                 plotlyOutput("cpi_quarterly_plot_first_board")
                )
                
                ),
@@ -103,11 +98,6 @@ tagList(
                conditionalPanel(
                  condition = "input.comparator_measure == 'Cost per item' && input.comparator_agg == 'Monthly'",
                  plotlyOutput("cpi_plot_second_board")
-               ),
-               
-               conditionalPanel(
-                 condition = "input.comparator_measure == 'Cost per item' && input.comparator_agg == 'Quarterly'",
-                 plotlyOutput("cpi_quarterly_plot_second_board")
                )
              
         ),
