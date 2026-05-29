@@ -12,7 +12,7 @@
 source("shiny/setup.R")
 
 # UI
-ui <- #secure_app(
+ui <- secure_app(
   
   #theme = my_theme,
   
@@ -101,27 +101,19 @@ ui <- #secure_app(
                  
                  source(file.path("shiny/pages/feedback/feedback_ui.R"), local = TRUE)$value
                  
-        ),
-        
-        tabPanel(title = "EDA",
-                 icon = icon_no_warning_fn("clipboard-question"),
-                 value = "eda",
-                 
-                 source(file.path("shiny/pages/eda/eda_ui.R"), local = TRUE)$value
-                 
         )
         
       )
     ) 
   )
-#)
+)
 
 
 server <- function(input, output, session) {
   
   ##############################################
   # Password protection----
-  #source(file.path("deployment/protect_app.R"), local = TRUE)$value
+  source(file.path("deployment/protect_app.R"), local = TRUE)$value
   ##############################################
   
   # This chunk stops the app from timing out 
@@ -146,8 +138,7 @@ server <- function(input, output, session) {
   source(file.path("shiny/pages/cost/cost_server.R"), local = TRUE)$value
   source(file.path("shiny/pages/comparator/comparator_server.R"), local = TRUE)$value
   source(file.path("shiny/pages/trend monitoring/trend_monitoring_server.R"), local = TRUE)$value
-  source(file.path("shiny/pages/eda/eda_server.R"), local = TRUE)$value
-  
+
 }
 
 # will password protect the app when deployed
