@@ -30,7 +30,7 @@ ui <- secure_app(
                            target = "_blank"
         ), # PHS logo links to PHS website
         style = "position: relative; top: 0.8em; right: 0.8em; padding-bottom: 0.4em;"),
-        windowTitle = "Pharmacy Forecast",# Title for browser tab
+        windowTitle = "Prescribing Forecast",# Title for browser tab
         header = tags$head(includeCSS("www/styles.css"),  # CSS stylesheet
                            #includeScript("shiny/www/javascript.js"),
                            tags$link(rel = "shortcut icon", href = "favicon_phs.ico") # Icon for browser tab

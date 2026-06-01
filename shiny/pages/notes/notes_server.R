@@ -126,7 +126,7 @@ output$dashboard_updates <- renderUI({
     tags$ul(
       style = "margin-left: 20px; list-style-type: disc;",
       tags$li("New tab added for comparing forecasts of two boards"),
-      tags$li("Phasings value added back in based on gross ingredient forecast"),
+      tags$li("Phasings value added back in based on gross ingredient cost forecast"),
       tags$li("Links and tabs updated to remove mention of 'pharmacy' and replace with 'prescribing'")
     )        
   )
