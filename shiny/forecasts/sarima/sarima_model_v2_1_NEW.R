@@ -99,7 +99,7 @@ board_data <- board_data %>%
   mutate(`Cost per item` = `Claim PD Paid GIC excl. BB` / `Claim PD Number of Paid Items`) %>%
   # double check data is arranged by board and date 
   arrange(`Presc Health Board Name`, `Paid Date`) #%>%
-  #filter(`Paid Date` < "2026-01-01")
+#filter(`Paid Date` < "2026-01-01")
 
 board_data$`Cost per item`[board_data$`Cost per item` %in% c("", NA, NaN)] <- 0 # assign NAs to any blank values
 
@@ -359,35 +359,35 @@ run_forecast <- function(columns, hbs, years) {
             for (P in P_values) {
               for (Q in Q_values) {
                 tryCatch({
-                fit <- Arima(y_ts, order = c(p, 1, q), seasonal = c(P,1,Q))
-                p_value <- checkresiduals(fit, plot = FALSE)$p.value
-                forecast_obj <- forecast(fit, h = historical_data)
-                accuracylist <- as_tibble(accuracy(forecast_obj))
-                forecast_list <- window(forecast_obj$mean, end = c(year(window_max), month(window_max)))
-                
-                comparison <- comparison %>%
-                  mutate(forecast = forecast_list,
-                         error = (abs(.data[[column]] - forecast) / .data[[column]]) * 100)
-                
-                results <- bind_rows(results, tibble(
-                  board = board,
-                  p = p, 
-                  q = q,
-                  P = P,
-                  Q = Q,
-                  AIC = AIC(fit),
-                  BIC = BIC(fit),
-                  AICc = fit$aicc,
-                  ME = accuracylist$ME,
-                  MPE = accuracylist$MPE,
-                  MAPE = accuracylist$MAPE,
-                  ACF1 = accuracylist$ACF1,
-                  p_value = p_value,
-                  forecast_error = mean(comparison$error)
-                ))
-              }, error = function(e) {
-                message(paste("Error for ARIMA(", p, ",1,", q, ")(", P, ",1,", Q, "):", e$message))
-              })
+                  fit <- Arima(y_ts, order = c(p, 1, q), seasonal = c(P,1,Q))
+                  p_value <- checkresiduals(fit, plot = FALSE)$p.value
+                  forecast_obj <- forecast(fit, h = historical_data)
+                  accuracylist <- as_tibble(accuracy(forecast_obj))
+                  forecast_list <- window(forecast_obj$mean, end = c(year(window_max), month(window_max)))
+                  
+                  comparison <- comparison %>%
+                    mutate(forecast = forecast_list,
+                           error = (abs(.data[[column]] - forecast) / .data[[column]]) * 100)
+                  
+                  results <- bind_rows(results, tibble(
+                    board = board,
+                    p = p, 
+                    q = q,
+                    P = P,
+                    Q = Q,
+                    AIC = AIC(fit),
+                    BIC = BIC(fit),
+                    AICc = fit$aicc,
+                    ME = accuracylist$ME,
+                    MPE = accuracylist$MPE,
+                    MAPE = accuracylist$MAPE,
+                    ACF1 = accuracylist$ACF1,
+                    p_value = p_value,
+                    forecast_error = mean(comparison$error)
+                  ))
+                }, error = function(e) {
+                  message(paste("Error for ARIMA(", p, ",1,", q, ")(", P, ",1,", Q, "):", e$message))
+                })
               }
             }
           }
@@ -442,85 +442,85 @@ for (hb in healthboards) {
     
     for (y in years_to_run) {
       
-        # Year adjustment
-        diff <- year(latest_date) - y
+      # Year adjustment
+      diff <- year(latest_date) - y
+      
+      date_adj <- board_data %>%
+        filter(`Paid Date` == max(`Paid Date`) - months(12 * diff))
+      
+      window_max <- unique(date_adj$`Paid Date`)
+      MaxDate <- window_max - months(num_of_months)
+      
+      df <- board_data %>% # code does same as it does in run_forecast code
+        filter(`Presc Health Board Name` == hb) %>%
+        select(`Paid Date`, column) %>%
+        #select(Date, `Claim PD Number of Paid Items`) %>%
+        filter(`Paid Date` > '2011-03-31' & `Paid Date` < MaxDate + days(1))
+      
+      y_ts <- ts(#df$`Claim PD Number of Paid Items`,
+        df[[column]],
+        start = c(2011,4),
+        frequency = 12)
+      
+      filtered_list <- forecast_performance %>% # use results from run_forecast
+        filter(board == hb,
+               type == column,
+               year == y,
+               historical_data == num_of_months)
+      
+      p <- filtered_list$p # plug in parameters
+      q <- filtered_list$q
+      P <- filtered_list$P # plug in parameters
+      Q <- filtered_list$Q
+      
+      # Attempt ARIMA fit and forecast
+      result <- tryCatch({
+        fit <- Arima(y_ts, order = c(p, 1, q), seasonal = c(P, 1, Q))
+        forecast_obj <- forecast(fit, h = num_of_months + 36)
         
-        date_adj <- board_data %>%
-          filter(`Paid Date` == max(`Paid Date`) - months(12 * diff))
+        # Build the data frame if successful
+        data.frame(
+          Board = hb,
+          Date = 
+            seq.Date(
+              from = ceiling_date(MaxDate %m+% months(1), unit = "month"),  # start at next month boundary
+              by = "month",
+              length.out = num_of_months + 36
+            ) - days(1)  # subtract 1 day to get last day of month
+          ,
+          Forecast = as.numeric(forecast_obj$mean),
+          Lower_80 = as.numeric(forecast_obj$lower[, 1]),
+          Upper_80 = as.numeric(forecast_obj$upper[, 1]),
+          Lower_95 = as.numeric(forecast_obj$lower[, 2]),
+          Upper_95 = as.numeric(forecast_obj$upper[, 2]),
+          Type = column,
+          Year = y,
+          Historical_Data = paste0(num_of_months, ' months of historical data'),
+          F_Horizon = num_of_months + 36,
+          Arima_Error = FALSE  # No error
+        )
+      }, error = function(e) {
+        message(paste("ARIMA error for", hb, ":", e$message))
         
-        window_max <- unique(date_adj$`Paid Date`)
-        MaxDate <- window_max - months(num_of_months)
-        
-        df <- board_data %>% # code does same as it does in run_forecast code
-          filter(`Presc Health Board Name` == hb) %>%
-          select(`Paid Date`, column) %>%
-          #select(Date, `Claim PD Number of Paid Items`) %>%
-          filter(`Paid Date` > '2011-03-31' & `Paid Date` < MaxDate + days(1))
-        
-        y_ts <- ts(#df$`Claim PD Number of Paid Items`,
-          df[[column]],
-          start = c(2011,4),
-          frequency = 12)
-        
-        filtered_list <- forecast_performance %>% # use results from run_forecast
-          filter(board == hb,
-                 type == column,
-                 year == y,
-                 historical_data == num_of_months)
-        
-        p <- filtered_list$p # plug in parameters
-        q <- filtered_list$q
-        P <- filtered_list$P # plug in parameters
-        Q <- filtered_list$Q
-        
-        # Attempt ARIMA fit and forecast
-        result <- tryCatch({
-          fit <- Arima(y_ts, order = c(p, 1, q), seasonal = c(P, 1, Q))
-          forecast_obj <- forecast(fit, h = num_of_months + 36)
-          
-          # Build the data frame if successful
-          data.frame(
-            Board = hb,
-            Date = 
-              seq.Date(
-                from = ceiling_date(MaxDate %m+% months(1), unit = "month"),  # start at next month boundary
-                by = "month",
-                length.out = num_of_months + 36
-              ) - days(1)  # subtract 1 day to get last day of month
-            ,
-            Forecast = as.numeric(forecast_obj$mean),
-            Lower_80 = as.numeric(forecast_obj$lower[, 1]),
-            Upper_80 = as.numeric(forecast_obj$upper[, 1]),
-            Lower_95 = as.numeric(forecast_obj$lower[, 2]),
-            Upper_95 = as.numeric(forecast_obj$upper[, 2]),
-            Type = column,
-            Year = y,
-            Historical_Data = paste0(num_of_months, ' months of historical data'),
-            F_Horizon = num_of_months + 36,
-            Arima_Error = FALSE  # No error
-          )
-        }, error = function(e) {
-          message(paste("ARIMA error for", hb, ":", e$message))
-          
-          # Create placeholder rows with NA values
-          data.frame(
-            Board = hb,
-            Date = seq.Date(Sys.Date(), by = "month", length.out = num_of_months),
-            Forecast = NA,
-            Lower_80 = NA,
-            Upper_80 = NA,
-            Lower_95 = NA,
-            Upper_95 = NA,
-            Type = column,
-            Year = y,
-            Historical_Data = paste0(num_of_months, ' months of historical data'),
-            F_Horizon = num_of_months + 36,
-            Arima_Error = TRUE  # Error occurred
-          )
-        })
-        
-        # Append to combined_forecast
-        combined_forecast <- combined_forecast %>% rbind(result)
+        # Create placeholder rows with NA values
+        data.frame(
+          Board = hb,
+          Date = seq.Date(Sys.Date(), by = "month", length.out = num_of_months),
+          Forecast = NA,
+          Lower_80 = NA,
+          Upper_80 = NA,
+          Lower_95 = NA,
+          Upper_95 = NA,
+          Type = column,
+          Year = y,
+          Historical_Data = paste0(num_of_months, ' months of historical data'),
+          F_Horizon = num_of_months + 36,
+          Arima_Error = TRUE  # Error occurred
+        )
+      })
+      
+      # Append to combined_forecast
+      combined_forecast <- combined_forecast %>% rbind(result)
       
     }
     
