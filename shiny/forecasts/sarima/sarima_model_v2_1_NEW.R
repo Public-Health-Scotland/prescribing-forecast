@@ -1,6 +1,6 @@
 ### SARIMA Forecast
 ### Honours Project
-### Date last updated: 15/01/2026
+### Date last updated: 08/06/2026
 ### Author: Liam Rooney
 ### Model: v2.1
 
@@ -64,9 +64,9 @@ columns_to_forecast = c(
 # Month of the year that time series is capped on will be guided by the last month of data loaded into PIS
 
 # Set this year based on the last month loaded into nDCVP
-years_to_run <- c(2026)
+years_to_run <- c(2025)
 historical_data = 12 # number of months for forecast to be compared with against historical data (if set at 12, forecast vs. observed for previous year will give an average absolute error)
-run_number = 4 # update each time
+run_number = 999 # update each time
 
 healthboards <- c("NHS AYRSHIRE & ARRAN", "NHS BORDERS", "NHS DUMFRIES & GALLOWAY", "NHS FIFE",
                   "NHS FORTH VALLEY", "NHS GRAMPIAN", "NHS GREATER GLASGOW & CLYDE", "NHS HIGHLAND", 
@@ -83,7 +83,7 @@ data$`Claim PD Paid GIC excl. BB` <- as.double(gsub(",", "", data$`Claim PD Paid
 
 board_data <- data %>%
   mutate(`Paid Date` = dmy(`Paid Date`)) %>%
-  filter(`Paid Date` > '2009-12-31') # filter data for 2010 onwards so those values can be used as lags for 2011, where there was introduction of free prescriptions
+  filter(`Paid Date` > '2009-12-31' & `Paid Date` < "2025-04-01") # filter data for 2010 onwards so those values can be used as lags for 2011, where there was introduction of free prescriptions
 
 rm(data)
 
@@ -98,7 +98,8 @@ board_data <- board_data %>%
   bind_rows(scotland_data) %>%
   mutate(`Cost per item` = `Claim PD Paid GIC excl. BB` / `Claim PD Number of Paid Items`) %>%
   # double check data is arranged by board and date 
-  arrange(`Presc Health Board Name`, `Paid Date`)
+  arrange(`Presc Health Board Name`, `Paid Date`) #%>%
+  #filter(`Paid Date` < "2026-01-01")
 
 board_data$`Cost per item`[board_data$`Cost per item` %in% c("", NA, NaN)] <- 0 # assign NAs to any blank values
 
@@ -106,7 +107,32 @@ board_data$`Cost per item`[board_data$`Cost per item` %in% c("", NA, NaN)] <- 0 
 healthboards <- unique(board_data$`Presc Health Board Name`) 
 dates <- unique(board_data$`Paid Date`)
 
-# 2.3 Investigating time-series
+# # 2.3 Investigating time-series
+# acf_pacf_items <- scotland_data %>%
+#   #filter(Board == "NHS AYRSHIRE & ARRAN") %>%
+#   arrange(`Paid Date`) %>%
+#   filter(`Paid Date` > "2011-01-01" & `Paid Date` < "2026-01-01") %>%
+#   select(`Paid Date`, `Claim PD Number of Paid Items`) %>%
+#   mutate(Month = yearmonth(`Paid Date`)) %>%
+#   as_tsibble(index = Month) %>%
+#   #gg_tsdisplay(`Claim PD Number of Paid Items`)
+#   mutate(
+#     diff_1 = difference(`Claim PD Number of Paid Items`, 1),
+#     diff_12 = difference(diff_1, 12)
+#   ) #%>%
+#   #gg_tsdisplay(diff_12)
+# 
+# acf_pacf_items %>%
+#   #ACF(`Claim PD Number of Paid Items`) %>%
+#   #ACF(diff_1) %>%
+#   ACF(diff_12) %>%
+#   autoplot() +
+#   theme(plot.title = element_text(size = 18),
+#         axis.title.x = element_text(size = 14), # X-axis title
+#         axis.title.y = element_text(size = 14), # Y-axis title
+#         axis.text.x = element_text(size = 12), # X-axis labels
+#         axis.text.y = element_text(size = 12)) # Y-axis labels
+
 # data <- board_data %>%
 #   filter(`Presc Health Board Name` == 'SCOTLAND') %>%
 #   select(`Paid Date`, `Claim PD Number of Paid Items`)
@@ -127,7 +153,7 @@ dates <- unique(board_data$`Paid Date`)
 ## 3.1. Initialise key variables and tables to be used ----
 
 latest_date <- max(board_data$`Paid Date`)
-max_date <- max(board_data$`Paid Date`) - months(historical_data)
+max_date <- latest_date - months(historical_data)
 
 ## 3.2. Calculating business days - controlled by working_day logical variable ----
 
@@ -225,8 +251,9 @@ start_time <- Sys.time()
 # Create empty results_list with required columns and correct data types
 results_list <- tibble(board = character(),
                        p = numeric(),
-                       d = numeric(),
                        q = numeric(),
+                       P = numeric(),
+                       Q = numeric(),
                        AIC = double(),
                        BIC = double(),
                        AICc = double(),
@@ -269,27 +296,70 @@ run_forecast <- function(columns, hbs, years) {
         df <- board_data %>%
           filter(`Presc Health Board Name` == board) %>%
           select(`Paid Date`, column) %>% # can only select date column and predictor variable for use in time series
-          filter(`Paid Date` > '2010-12-31' & `Paid Date` < MaxDate + days(1))
+          filter(`Paid Date` > '2011-03-31' & `Paid Date` < MaxDate + days(1))
         
-        y_ts <- ts(df[[column]], start = 2011, frequency = 12) # start of time series limited to post-2011 due to introduction of free prescriptions, frequency is 12 to indicate monthly time-series
+        y_ts <- ts(df[[column]], start = c(2011,4), frequency = 12) # start of time series limited to post-2011 due to introduction of free prescriptions, frequency is 12 to indicate monthly time-series
         
         comparison <- board_data %>%
           filter(`Presc Health Board Name` == board) %>%
           select(`Paid Date`, column) %>%
           filter(`Paid Date` > MaxDate & `Paid Date` < window_max + days(1))
         
+        # # SARIMA grid
+        # p_values <- 0:9
+        # d_values <- 0:1
+        # q_values <- 0:9
+        # 
+        # results <- tibble()
+        # 
+        # for (p in p_values) {
+        #   for (d in d_values) {
+        #     for (q in q_values) {
+        #       tryCatch({
+        #         fit <- Arima(y_ts, order = c(p, d, q), seasonal = c(1,0,1))
+        #         p_value <- checkresiduals(fit, plot = FALSE)$p.value
+        #         forecast_obj <- forecast(fit, h = historical_data)
+        #         accuracylist <- as_tibble(accuracy(forecast_obj))
+        #         forecast_list <- window(forecast_obj$mean, end = c(year(window_max), month(window_max)))
+        #         
+        #         comparison <- comparison %>%
+        #           mutate(forecast = forecast_list,
+        #                  error = (abs(.data[[column]] - forecast) / .data[[column]]) * 100)
+        #         
+        #         results <- bind_rows(results, tibble(
+        #           board = board,
+        #           p = p, d = d, q = q,
+        #           AIC = AIC(fit),
+        #           BIC = BIC(fit),
+        #           AICc = fit$aicc,
+        #           ME = accuracylist$ME,
+        #           MPE = accuracylist$MPE,
+        #           MAPE = accuracylist$MAPE,
+        #           ACF1 = accuracylist$ACF1,
+        #           p_value = p_value,
+        #           forecast_error = mean(comparison$error)
+        #         ))
+        #       }, error = function(e) {
+        #         message(paste("Error for ARIMA(", p, ",", d, ",", q, "):", e$message))
+        #       })
+        #     }
+        #   }
+        # }
+        
         # SARIMA grid
-        p_values <- 0:9
-        d_values <- 0:1
-        q_values <- 0:9
+        p_values <- 0:4
+        q_values <- 0:4
+        P_values <- 0:1
+        Q_values <- 0:1
         
         results <- tibble()
         
         for (p in p_values) {
-          for (d in d_values) {
-            for (q in q_values) {
-              tryCatch({
-                fit <- Arima(y_ts, order = c(p, d, q), seasonal = c(1,0,1))
+          for (q in q_values) {
+            for (P in P_values) {
+              for (Q in Q_values) {
+                tryCatch({
+                fit <- Arima(y_ts, order = c(p, 1, q), seasonal = c(P,1,Q))
                 p_value <- checkresiduals(fit, plot = FALSE)$p.value
                 forecast_obj <- forecast(fit, h = historical_data)
                 accuracylist <- as_tibble(accuracy(forecast_obj))
@@ -301,7 +371,10 @@ run_forecast <- function(columns, hbs, years) {
                 
                 results <- bind_rows(results, tibble(
                   board = board,
-                  p = p, d = d, q = q,
+                  p = p, 
+                  q = q,
+                  P = P,
+                  Q = Q,
                   AIC = AIC(fit),
                   BIC = BIC(fit),
                   AICc = fit$aicc,
@@ -313,8 +386,9 @@ run_forecast <- function(columns, hbs, years) {
                   forecast_error = mean(comparison$error)
                 ))
               }, error = function(e) {
-                message(paste("Error for ARIMA(", p, ",", d, ",", q, "):", e$message))
+                message(paste("Error for ARIMA(", p, ",1,", q, ")(", P, ",1,", Q, "):", e$message))
               })
+              }
             }
           }
         }
@@ -341,7 +415,7 @@ forecast_performance <- run_forecast(columns_to_forecast, # ensure this is only 
                                      healthboards, # using healthboards variable, can be changed to certain boards
                                      years_to_run) # enter time series limit to be used
 
-latest_forecast_date <- format(Sys.Date() - days(1))
+latest_forecast_date <- format(Sys.Date())
 
 saveRDS(forecast_performance, glue('{path}/shiny/forecasts/sarima/output/', historical_data,' months/run ', run_number,'/forecast-performance-', latest_forecast_date, '.rds'))
 
@@ -381,11 +455,11 @@ for (hb in healthboards) {
           filter(`Presc Health Board Name` == hb) %>%
           select(`Paid Date`, column) %>%
           #select(Date, `Claim PD Number of Paid Items`) %>%
-          filter(`Paid Date` > '2010-12-31' & `Paid Date` < MaxDate + days(1))
+          filter(`Paid Date` > '2011-03-31' & `Paid Date` < MaxDate + days(1))
         
         y_ts <- ts(#df$`Claim PD Number of Paid Items`,
           df[[column]],
-          start = 2011,
+          start = c(2011,4),
           frequency = 12)
         
         filtered_list <- forecast_performance %>% # use results from run_forecast
@@ -395,12 +469,13 @@ for (hb in healthboards) {
                  historical_data == num_of_months)
         
         p <- filtered_list$p # plug in parameters
-        d <- filtered_list$d
         q <- filtered_list$q
+        P <- filtered_list$P # plug in parameters
+        Q <- filtered_list$Q
         
         # Attempt ARIMA fit and forecast
         result <- tryCatch({
-          fit <- Arima(y_ts, order = c(p, d, q), seasonal = c(1, 0, 1))
+          fit <- Arima(y_ts, order = c(p, 1, q), seasonal = c(P, 1, Q))
           forecast_obj <- forecast(fit, h = num_of_months + 36)
           
           # Build the data frame if successful
