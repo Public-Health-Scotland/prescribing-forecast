@@ -21,7 +21,7 @@ page_fillable(
       shinyWidgets::radioGroupButtons(
         inputId = "intro_select",
         label = NULL,
-        choices = c("General Information","Using this dashboard","Dashboard updates","Model updates"),
+        choices = c("General Information","Using this dashboard","Dashboard updates","Model updates","Sharing of outputs"),
                     #,"Contact"),
         status = "primary",
         direction = "vertical",
@@ -52,8 +52,15 @@ page_fillable(
       conditionalPanel(
         condition = "input.intro_select == 'Model updates'",
         uiOutput('model_updates')
+      ), # conditionalPanel
+      
+      # General information
+      conditionalPanel(
+        condition = "input.intro_select == 'Sharing of outputs'",
+        uiOutput('share_outputs')
       ) # conditionalPanel
     ),
+    
     #   # General information
     #   conditionalPanel(
     #     condition = "input.intro_select == 'Contact'",
