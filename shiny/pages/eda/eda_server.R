@@ -20,7 +20,11 @@ eda_data_tsibble <- reactive({
 output$items_ts <- renderPlot({
   
   eda_data_tsibble() %>%
-    gg_season(`Claim PD Number of Paid Items`, labels = 'both')
+    gg_season(`Claim PD Number of Paid Items`, labels = 'both') +
+    scale_y_continuous(labels = comma) +
+    labs(
+      x = "Month"
+    )
   
 }, res = 96)
 
@@ -28,7 +32,11 @@ output$items_ts <- renderPlot({
 output$gic_ts <- renderPlot({
   
   eda_data_tsibble() %>%
-    gg_season(`Claim PD Paid GIC excl. BB`, labels = 'both')
+    gg_season(`Claim PD Paid GIC excl. BB`, labels = 'both') +
+    scale_y_continuous(labels = comma) +
+    labs(
+      x = "Month"
+    )
   
 }, res = 96)
 
@@ -36,7 +44,11 @@ output$gic_ts <- renderPlot({
 output$cpi_ts <- renderPlot({
   
   eda_data_tsibble() %>%
-    gg_season(`Cost per item`, labels = 'both')
+    gg_season(`Cost per item`, labels = 'both') +
+    scale_y_continuous(labels = comma) +
+    labs(
+      x = "Month"
+    )
   
 }, res = 96)
 
