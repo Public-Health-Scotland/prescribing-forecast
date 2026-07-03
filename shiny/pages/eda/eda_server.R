@@ -1,7 +1,7 @@
 # ############## EDA Server ######################
 
 # Putting EDA code in here to remove it from setup file
-eda_data <- read.csv('shiny/forecasts/data/Historical Data.csv', check.names = FALSE) %>%
+eda_data <- read.csv('shiny/data/Time-Series Data/Historical Data.csv', check.names = FALSE) %>%
   mutate(`Paid Date` = dmy(`Paid Date`)) %>%
   filter(`Paid Date` > '2009-12-31') 
 
@@ -27,7 +27,7 @@ rm(scotland_data)
 #   tsibble(index = 'month_new')
 
 ############## per 1,000 list size (weighted and non-weighted) ############## 
-list_sizes <- read.xlsx('shiny/data/population/List Sizes.xlsx') %>%
+list_sizes <- read.xlsx('shiny/data/List Sizes/List Sizes.xlsx') %>%
   mutate(quarter_date = as.Date(quarter_date, origin = "1899-12-30")) %>%
   dplyr::rename(`Paid Date` = quarter_date,
                 `Presc Health Board Name` = Board) %>%
@@ -221,12 +221,12 @@ acf_pacf_items <- forecast_items %>%
   filter(Date > "2011-01-01" & Date < "2026-01-01") %>%
   select(Date, `Number of Paid Items` = Measure) %>%
   mutate(Month = yearmonth(Date)) %>%
-  as_tsibble(index = Month) %>%
-  mutate(
-    diff_1 = difference(`Number of Paid Items`, 1),
-    diff_12 = difference(diff_1, 12)
-  ) %>%
-  gg_tsdisplay(diff_12)
+  as_tsibble(index = Month) #%>%
+  # mutate(
+  #   diff_1 = difference(`Number of Paid Items`, 1),
+  #   diff_12 = difference(diff_1, 12)
+  # ) %>%
+  # gg_tsdisplay(diff_12)
 
 
 autoplot(acf_pacf_items, `Number of Paid Items`)
@@ -240,12 +240,12 @@ acf_pacf_items %>%
                plot_type = 'partial', lag = 36) +
   labs(title="Seasonally differenced", y="")
 
-test_mape <- rbind(`forecast-performance-2026-05-28` %>% select(board, type, MAPE, run), forecast_performance %>% select(board, type, MAPE, run))
-
-t1 <- test_mape %>%
-  filter(!board == "SCOTLAND") %>%
-  group_by(run, type) %>%
-  summarise(avg = mean(MAPE))
+# test_mape <- rbind(`forecast-performance-2026-05-28` %>% select(board, type, MAPE, run), forecast_performance %>% select(board, type, MAPE, run))
+# 
+# t1 <- test_mape %>%
+#   filter(!board == "SCOTLAND") %>%
+#   group_by(run, type) %>%
+#   summarise(avg = mean(MAPE))
 
 ##### Read in machine learning model results
 ml_preds <- read_excel("model_outputs.xlsx", sheet = "Predictions") %>%
@@ -255,7 +255,7 @@ ml_preds_new <- ml_preds %>%
   select(Board, Date = time, Type = Target, Measure = Actual, Predicted, Model) %>%
   pivot_wider(names_from = Model, values_from = Predicted)
 
-forecast_comp <- readRDS(paste0('shiny/forecasts/sarima/output/forecast-run-999.rds')) %>%
+forecast_comp <- readRDS(paste0('shiny/forecasts/sarima/output/run 999/forecast-run-999.rds')) %>%
   filter(Historical_Data == "12 months of historical data",
          Year == 2025,
          F_Horizon == 48,

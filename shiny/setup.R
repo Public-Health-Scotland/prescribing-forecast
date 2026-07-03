@@ -40,6 +40,8 @@ library(phsmethods)
 library(tibble)
 library(tsibble)
 library(feasts)
+library(fabletools)
+#library(GGally)
 
 # PHS styling packages ----
 library(phsstyles)
