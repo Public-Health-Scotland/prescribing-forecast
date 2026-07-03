@@ -126,7 +126,7 @@ output$dashboard_updates <- renderUI({
     tags$ul(
       style = "margin-left: 20px; list-style-type: disc;",
       tags$li("New tab added for comparing forecasts of two boards"),
-      tags$li("Phasings value added back in based on gross ingredient forecast"),
+      tags$li("Phasings value added back in based on gross ingredient cost forecast"),
       tags$li("Links and tabs updated to remove mention of 'pharmacy' and replace with 'prescribing'")
     )        
   )
@@ -246,7 +246,121 @@ output$model_updates <-  renderUI({
   ) # div
 }) # renderUI
 
+## Sharing of outputs ####
+output$share_outputs <-  renderUI({
+  
+  div(
+    fluidRow(
+      
+      h1("Sharing outputs outwith the dashboard"),
+      
+      p("The sharing of outputs from this dashboard is encouraged, however anything in relation to the forecasts and their values e.g. charts or data tables, must be supplemented with the correct notes."),
+      p("Please see below supporting narrative that should be distributed alongside any forecast outputs."),
+      
+      div(
+        style = "position: relative;
+                 border: 1px solid #ddd;
+                 border-radius: 8px;           
+                 padding: 15px 50px 15px 15px;
+                 background-color: #f9f9f9;
+                 margin-top: 5px;
+                 max-width: 95%",
+        
+        actionButton(
+          inputId = "copy_btn",
+          label = tags$i(class = "fa-solid fa-copy"),
+          title = "Copy text",
+          style = "position: absolute;
+           top: 10px;
+           right: 10px;
+           border: none;
+           background: transparent;
+           cursor: pointer;
+           font-size: 16px;
+           color: #555;
+           padding: 0;
+           min-width: auto;",
+          class = "btn btn-link"
+        ),
+        
+        # Text content
+        div(
+          id = "copy_text_block",
+          
+          tags$p(
+            tags$i(
+              "Please note that predictions detailed in this table/chart should be treated as such, ",
+              strong("they are not an indication of fact."),
+              " Predictions are informed using a SARIMA (Seasonal Auto-Regressive Integrated Moving Average) model using historical data, capturing trend and seasonality patterns through its parameter definitions. Please see the ",
+              tags$a(href = "https://scotland.shinyapps.io/phs-prescribing-forecast/", 
+                     "Prescribing Forecast", target = "_blank"),
+              " dashboard for further information."
+            )
+          ),
+          
+          tags$p(
+            tags$i(
+              "Confidence intervals in the context of SARIMA forecasts quantifies the uncertainty of the predicted values. For example, a ",
+              strong("95% confidence interval"),
+              " suggests that the true value is ",
+              strong("expected to lie within this range 95% of the time."),
+              " An ",
+              strong("80% confidence interval"),
+              " suggests that the true value is ",
+              strong("expected to lie within this range 80% of the time."),
+              " These intervals help to communicate the reliability of predictions. Confidence interval ranges are likely to widen with each incremental time point, reflecting the higher level of uncertainty attributed to long-term predictions."
+            )
+          )
+        )
+      ),
+      
+      # div(
+      #   id = "copy_text_block",
+      #   
+      #   tags$p(
+      #     tags$i(
+      #       "Please note that predictions detailed in this table/chart should be treated as such, ",
+      #       strong("they are not an indication of fact."),
+      #       " Predictions are informed using a SARIMA (Seasonal Auto-Regressive Integrated Moving Average) model using historical data, capturing trend and seasonality patterns through its parameter definitions. Please see the ",
+      #       tags$a(href = "https://scotland.shinyapps.io/phs-prescribing-forecast/", 
+      #              "Prescribing Forecast", target = "_blank"),
+      #       " dashboard for further information."
+      #     )
+      #   ),
+      #   
+      #   tags$p(
+      #     tags$i(
+      #       "Confidence intervals in the context of SARIMA forecasts quantifies the uncertainty of the predicted values. For example, a ",
+      #       strong("95% confidence interval"),
+      #       " suggests that the true value is ",
+      #       strong("expected to lie within this range 95% of the time."),
+      #       " An ",
+      #       strong("80% confidence interval"),
+      #       " suggests that the true value is ",
+      #       strong("expected to lie within this range 80% of the time."),
+      #       " These intervals help to communicate the reliability of predictions. Confidence interval ranges are likely to widen with each incremental time point, reflecting the higher level of uncertainty attributed to long-term predictions."
+      #     )
+      #   )
+      # ),
+      
+      #actionButton("copy_btn", "Copy text")
+    
+    ) #fluidrow
+  ) # div
+}) # renderUI
 
+observeEvent(input$copy_btn, {
+  
+  shinyjs::runjs("
+    var el = document.getElementById('copy_text_block');
+    var html = el.innerHTML;
 
+    var blob = new Blob([html], { type: 'text/html' });
+    var data = [new ClipboardItem({ 'text/html': blob })];
 
+    navigator.clipboard.write(data);
+  ")
+  
+  showNotification('Copied to clipboard', type = 'message')
+})
 
