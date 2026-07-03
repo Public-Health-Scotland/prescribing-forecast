@@ -49,7 +49,7 @@ library(rsconnect)
 library(shinymanager)
 
 # Load core functions ----
-source("shiny/functions/core_functions.R")
+source("functions/core_functions.R")
 
 ## Plotting ----
 # Style of x and y axis
@@ -92,7 +92,7 @@ forecast_performance_date = '2026-05-24' # in the format YYYY-MM-DD
 # LOAD IN DATA HERE ----
 
 ############## Forecast ############## 
-forecast <- readRDS(paste0('shiny/forecasts/sarima/output/run ', run_number, '/forecast-run-', run_number,'.rds')) %>%
+forecast <- readRDS(paste0('forecasts/sarima/output/run ', run_number, '/forecast-run-', run_number,'.rds')) %>%
   filter(Historical_Data == "12 months of historical data",
          Year == latest_year,
          F_Horizon == 48,
@@ -182,15 +182,15 @@ forecast_cpi <- forecast %>%
 #   mutate(Type = "Phasings")
 # 
 # ### Save file for 26/27
-# write.xlsx(forecast_phasings, 'shiny/data/Phasings/2627 Phasings.xlsx')
+# write.xlsx(forecast_phasings, 'data/Phasings/2627 Phasings.xlsx')
 
 ### Phasings - leave uncommented once new file has been saved
-forecast_phasings <- read_excel('shiny/data/Phasings/2627 Phasings.xlsx')
+forecast_phasings <- read_excel('data/Phasings/2627 Phasings.xlsx')
 
 ############## Trend Monitoring Data ############## 
 
 ## List all Excel files in the directory
-file_list <- list.files(path = "shiny/data/Supplementary Trend Data/", pattern = "\\.xlsx$", full.names = TRUE)
+file_list <- list.files(path = "data/Supplementary Trend Data/", pattern = "\\.xlsx$", full.names = TRUE)
 
 ## Read all files into a list of data frames
 data_list <- map(file_list, ~read.xlsx(.x, startRow = 2, cols = 2:7, sep.names = ' '))
@@ -218,7 +218,7 @@ combined_data <- combined_data %>%
 ## compare figures with working days
 combined_data_wd <- combined_data
 
-business_days <- readRDS('shiny/data/Business Days/business_days_lookup.rds') %>%
+business_days <- readRDS('data/Business Days/business_days_lookup.rds') %>%
   dplyr::rename(`Paid Date` = Date)
 
 combined_data_wd <- combined_data_wd %>%
@@ -228,7 +228,7 @@ combined_data_wd <- combined_data_wd %>%
 #mutate(`Number of items per prescription per working day` = `Number of Paid Items per working day` / `No of Prescriptions per working day`)
 
 ############## Performance ############## 
-forecast_performance <- read_excel('shiny/forecasts/sarima/output/forecast-performance.xlsx')
+forecast_performance <- read_excel('forecasts/sarima/output/forecast-performance.xlsx')
 
 ############## Variables ############## 
 healthboards <- unique(forecast_items$Board)

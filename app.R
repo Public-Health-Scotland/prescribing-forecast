@@ -124,12 +124,7 @@ server <- function(input, output, session) {
   })
   
   # Get functions
-  source(file.path("shiny/functions/core_functions.R"), local = TRUE)$value
-  
-  # # Get content for intro and induction pages (key points would probably go here too)
-  # source(file.path("pages/intro_page.R"), local = TRUE)$value
-  # source(file.path("pages/instructions_page.R"), local = TRUE)$value
-  
+  source(file.path("functions/core_functions.R"), local = TRUE)$value
   
   # Get SERVER code for the data pages
   source(file.path("shiny/pages/notes/notes_server.R"), local = TRUE)$value
