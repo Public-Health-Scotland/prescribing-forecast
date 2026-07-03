@@ -245,12 +245,3 @@ my_theme <- bs_theme(
 
 
 
-
-
-
-
-
-
-
-
-
