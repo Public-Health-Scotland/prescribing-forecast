@@ -10,7 +10,6 @@
 /investigation
 /shiny/www
 /shiny/data
-/shiny/pages/eda
 admin/
 deploy/
 rsconnect/ 
