@@ -202,6 +202,25 @@ model2_1 <- div(
   )
 )
 
+model2_2 <- div(
+  
+  fluidRow(
+    
+    tags$b("Last updated: August 2026"),
+    tags$b("Platform: R"),
+    
+    p(linebreaks(0.5)),
+    
+    # Bullet pointed list with heading
+    tags$b("Key features:"),
+    tags$ul(
+      style = "margin-left: 20px; list-style-type: disc;",
+      tags$li("Parameter grid search updated"),
+      tags$li("Increased model stability, less computational time")
+    )
+  )
+)
+
 output$model_updates <-  renderUI({
   
   div(
@@ -236,9 +255,10 @@ output$model_updates <-  renderUI({
         ),
         layout_column_wrap(
           width = 1/2,
-          height = 300,
+          height = 600,
           card(full_screen = TRUE, card_header("v2.0"), model2_0),
-          card(full_screen = TRUE, card_header("v2.1"), model2_1)
+          card(full_screen = TRUE, card_header("v2.1"), model2_1),
+          card(full_screen = TRUE, card_header("v2.2"), model2_2)
         )      
         )
     )
