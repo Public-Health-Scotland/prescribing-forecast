@@ -87,6 +87,14 @@ ui <- secure_app(
                  
         ),
         
+        tabPanel(title = "Performance",
+                 icon = icon_no_warning_fn("arrow-trend-up"),
+                 value = "mod",
+
+                 source(file.path("shiny/pages/performance/performance_ui.R"), local = TRUE)$value
+
+        ),
+        
         tabPanel(title = "Model Details",
                  icon = icon_no_warning_fn("circle-info"),
                  value = "mod",
@@ -133,7 +141,8 @@ server <- function(input, output, session) {
   source(file.path("shiny/pages/cost/cost_server.R"), local = TRUE)$value
   source(file.path("shiny/pages/comparator/comparator_server.R"), local = TRUE)$value
   source(file.path("shiny/pages/trend monitoring/trend_monitoring_server.R"), local = TRUE)$value
-
+  source(file.path("shiny/pages/performance/performance_server.R"), local = TRUE)$value
+  
 }
 
 # will password protect the app when deployed
