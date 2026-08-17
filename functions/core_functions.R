@@ -35,33 +35,41 @@ icon_no_warning_fn = function(icon_name) {
 #' @examples
 #' make_table(forecast_items)
 
-make_table <- function(input_data_table, rows_to_display = 5) {
+# Generic data table
+make_table <- function(input_data_table, rows_to_display = 10) {
   # Take out underscores in column names for display purposes
-  table_colnames <- gsub("_", " ", colnames(input_data_table))
-
+  
+  #  table_colnames <- str_to_sentence(colnames(input_data_table))
+  table_colnames <- gsub("_", " ", colnames(input_data_table)) 
   dt <- DT::datatable(
     input_data_table,
     style = 'bootstrap',
-    class = 'table-bordered table-condensed',
+    class = 'table-condensed',
     rownames = FALSE,
     filter = "top",
     colnames = table_colnames,
+    extensions = 'FixedHeader',
     options = list(
       pageLength = rows_to_display,
       scrollX = FALSE,
       scrollY = FALSE,
-      dom = 'tip',
+      dom = 'tp',
       autoWidth = TRUE,
+      fixedHeader = FALSE,
+      
       # style header
-      initComplete = htmlwidgets::JS(
-        "function(settings, json) {",
-        "$(this.api().table().header()).css({'background-color': '#C5C3DA', 'color': '#3F3685'});",
-        "$(this.api().table().row().index()).css({'background-color': '#C5C3DA', 'color': '#3F3685'});",
-        "}"
+      initComplete = DT::JS(
+        "function(settings, json) {
+    console.log('DT init complete');
+    $(this.api().table().header()).css(
+      'background-color',
+      'red'
+    );
+  }"
       )
     )
   )
-
+  
   return(dt)
 }
 
@@ -128,7 +136,13 @@ make_chart <- function(data, measure, aggregation, filter) {
                y = -0.7,
                xanchor = "center",
                yanchor = "top"
-             ))
+             )) 
+    
+    plot <- config(plot,
+                   modeBarButtonsToRemove = bttn_remove,
+                   displaylogo = FALSE)
+    
+    
     
     plot
     
@@ -196,8 +210,130 @@ make_yoy_chart <- function(data, measure, filter) {
              yaxis = list(title = 'Percentage change (%)'),
              font = list(family = 'Arial'))
     
+    plot <- config(plot,
+                   modeBarButtonsToRemove = bttn_remove,
+                   displaylogo = FALSE)
+    
     plot
     
   })
+  
+}
+
+
+# 7. Joining new performance table to master performance file function ----
+
+#' @param existing_mpt Name of master performance table when loaded into R.
+#' @param new_pt Name of the latest performance table to be joined to master table.
+#' @param run_col Name of column specifying run number.
+#' @param sort_cols Name of columns to arrange dataframe by.
+#' 
+#' @returns If passes validation, updated master performance file with latest run included. 
+#'          If doesn't pass validation, process stops and user must investigate. 
+#' 
+#' @examples
+#' make_yoy_chart(gic_yearly_change,
+#'                "Gross Ingredient Cost (£)",
+#'                reactive(input$cost_board))
+#' 
+
+update_mpt <- function(existing_mpt,
+                       new_mpt,
+                       run_col = "run",
+                       sort_cols = c("run", "type")) {
+  
+  run_num <- unique(new_mpt[[run_col]])
+  
+  existing_rows <- existing_mpt %>%
+    dplyr::filter(.data[[run_col]] %in% run_num)
+  
+  # No matching run exists - add records
+  if (nrow(existing_rows) == 0) {
+    
+    updated_mpt <- dplyr::bind_rows(existing_mpt, new_mpt)
+    
+    message(
+      sprintf(
+        "Run number(s) %s not found in existing data. %s row(s) successfully added.",
+        paste(run_num, collapse = ", "),
+        nrow(new_mpt)
+      )
+    )
+    
+    return(updated_mpt)
+    
+  }
+  
+  # Compare existing and incoming records
+  common_cols <- intersect(
+    names(existing_rows),
+    names(new_mpt)
+  )
+  
+  existing_check <- existing_rows %>%
+    dplyr::select(dplyr::all_of(common_cols)) %>%
+    dplyr::arrange(dplyr::across(dplyr::all_of(sort_cols)))
+  
+  new_check <- new_mpt %>%
+    dplyr::select(dplyr::all_of(common_cols)) %>%
+    dplyr::arrange(dplyr::across(dplyr::all_of(sort_cols)))
+  
+  # Standardise date columns
+  date_cols <- names(existing_check)[
+    grepl("date", names(existing_check), ignore.case = TRUE)
+  ]
+  
+  if (length(date_cols) > 0) {
+    
+    existing_check <- existing_check %>%
+      dplyr::mutate(
+        dplyr::across(
+          dplyr::all_of(date_cols),
+          ~ format(as.Date(.), "%Y-%m-%d")
+        )
+      )
+    
+    new_check <- new_check %>%
+      dplyr::mutate(
+        dplyr::across(
+          dplyr::all_of(date_cols),
+          ~ format(as.Date(.), "%Y-%m-%d")
+        )
+      )
+    
+  }
+  
+  are_equal <- isTRUE(
+    all.equal(
+      existing_check,
+      new_check,
+      check.attributes = FALSE
+    )
+  )
+  
+  if (are_equal) {
+    
+    message(
+      sprintf(
+        "Run number(s) %s already exist and are identical. No rows added.",
+        paste(run_num, collapse = ", ")
+      )
+    )
+    
+    return(existing_mpt)
+    
+  }
+  
+  stop(
+    sprintf(
+      paste0(
+        "Run number(s) %s already exist, ",
+        "but the incoming records differ from those already stored. ",
+        "Process halted."
+      ),
+      paste(run_num, collapse = ", ")
+    ),
+    call. = FALSE
+  )
   
 }

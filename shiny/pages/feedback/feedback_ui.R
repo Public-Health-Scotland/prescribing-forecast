@@ -17,7 +17,7 @@ tagList(
       10,
       # Embed Microsoft Form via iframe
       tags$iframe(
-        src = "https://forms.office.com/e/bjUKrazLh0?embed=true",
+        src = "https://forms.cloud.microsoft/e/bjUKrazLh0?embed=true",
         width = "100%",
         height = "800",
         frameborder = "0",

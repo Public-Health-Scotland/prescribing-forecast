@@ -128,7 +128,15 @@ output$dashboard_updates <- renderUI({
       tags$li("New tab added for comparing forecasts of two boards"),
       tags$li("Phasings value added back in based on gross ingredient cost forecast"),
       tags$li("Links and tabs updated to remove mention of 'pharmacy' and replace with 'prescribing'")
-    )        
+    ),
+    
+    tags$b("August 2026:"),
+    p(linebreaks(0.5)),
+    tags$ul(
+      style = "margin-left: 20px; list-style-type: disc;",
+      tags$li("Performance tab added to allow users to see accuracy measurements (still in development)")
+    )
+    
   )
   
 })
@@ -215,10 +223,13 @@ model2_2 <- div(
     tags$b("Key features:"),
     tags$ul(
       style = "margin-left: 20px; list-style-type: disc;",
+      tags$li("Data extract updated to match Schedule 5 excl. England report; excluding English prescribing and dispensing, only including community pharmacy and GP prescribing"),
       tags$li("Parameter grid search updated"),
       tags$li("Increased model stability, less computational time")
     )
+    
   )
+  
 )
 
 output$model_updates <-  renderUI({
