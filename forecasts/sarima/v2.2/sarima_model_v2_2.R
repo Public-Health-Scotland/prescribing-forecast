@@ -50,9 +50,6 @@ setwd('/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-
 source("functions/core_functions.R")
 
 # These are the columns that will be forecasted
-# WARNING: The more columns included, the longer the runtime will be. It is recommended that this script is set to run as a Workbench job.
-working_day = FALSE
-
 # Comment columns out as required
 columns_to_forecast = c(
   'Claim PD Number of Paid Items',
