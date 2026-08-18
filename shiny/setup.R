@@ -41,7 +41,7 @@ library(tibble)
 library(tsibble)
 library(feasts)
 library(fabletools)
-#library(GGally)
+library(GGally)
 
 # PHS styling packages ----
 library(phsstyles)
