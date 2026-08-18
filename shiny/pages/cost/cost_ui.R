@@ -11,6 +11,8 @@ tagList(
     #p(linebreaks(0.5)),
     tags$b("Quarterly aggregation is not available for the cost per item forecast."),
     p(linebreaks(0.5)),
+    tags$b("Phasings forecasts are updated at the first scheduled refresh of the financial year to allow for local budget planning. These will remain static until the following year, regardless of changes to data extracts throughout the year. This ensures consistency in the output and removes the potential impact that conflicting phasing values could have on planning."),
+    p(linebreaks(0.5)),
     tags$b("Please also note that the phasings forecast does not detail any confidence intervals: as this value is calculated directly from the gross ingredient cost forecast we cannot derive and provide reliable confidence intervals here."),
     p(linebreaks(0.5))
     
