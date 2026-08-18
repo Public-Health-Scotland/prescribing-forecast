@@ -52,24 +52,6 @@ library(shinymanager)
 source("functions/core_functions.R")
 
 ## Plotting ----
-# Style of x and y axis
-xaxis_plots <- list(
-  title = FALSE,
-  tickfont = list(size = 14),
-  titlefont = list(size = 14),
-  showline = TRUE,
-  fixedrange = TRUE
-)
-
-yaxis_plots <- list(
-  title = FALSE,
-  rangemode = "tozero",
-  fixedrange = TRUE,
-  size = 4,
-  tickfont = list(size = 14),
-  titlefont = list(size = 14)
-)
-
 # Buttons to remove from plotly plots
 bttn_remove <- list(
   'select2d',
@@ -87,7 +69,14 @@ bttn_remove <- list(
 # Key variables to load files
 run_number = 4
 latest_year = 2026
-forecast_performance_date = '2026-05-24' # in the format YYYY-MM-DD
+new_fy = FALSE # this should be true if updating in May/June following PIS load of March data, completing full financial year
+#forecast_performance_date = '2026-05-24' # in the format YYYY-MM-DD
+
+# Format FY in 4 digit e.g. 2627
+fy_short <- paste0(
+  substr(latest_year, 3, 4),
+  as.character(as.numeric(substr(latest_year, 3, 4)) + 1)
+)
 
 # LOAD IN DATA HERE ----
 
@@ -167,30 +156,33 @@ forecast_cpi <- forecast %>%
   ungroup() 
 
 ## Phasings - uncomment this code once full financial year of data is in
-# forecast_phasings <- forecast_gic %>%
-#   filter(Date > "2010-03-31") %>%
-#   group_by(Board, FY, Type) %>%
-#   mutate(FY_Spend = sum(Measure),
-#          FY_Spend_Forecast = sum(Forecast)) %>%
-#   ungroup() %>%
-#   mutate(Phasings_Obs = Measure / FY_Spend * 100,
-#          Phasings_Forecast = Forecast / FY_Spend_Forecast * 100) %>%
-#   select(-Measure, -Forecast, -YoY, -Lower_80, -Lower_95, -Upper_80, -Upper_95) %>%
-#   dplyr::rename(Measure = Phasings_Obs,
-#                 Forecast = Phasings_Forecast) %>%
-#   select(Board, Date, Type, Measure, Forecast, everything()) %>%
-#   mutate(Type = "Phasings")
-# 
-# ### Save file for 26/27
-# write.xlsx(forecast_phasings, 'data/Phasings/2627 Phasings.xlsx')
-
-### Phasings - leave uncommented once new file has been saved
-forecast_phasings <- read_excel('data/Phasings/2627 Phasings.xlsx')
+if(new_fy == TRUE) {
+  
+  forecast_phasings <- forecast_gic %>%
+    filter(Date > "2010-03-31") %>%
+    group_by(Board, FY, Type) %>%
+    mutate(FY_Spend = sum(Measure),
+           FY_Spend_Forecast = sum(Forecast)) %>%
+    ungroup() %>%
+    mutate(Phasings_Obs = Measure / FY_Spend * 100,
+           Phasings_Forecast = Forecast / FY_Spend_Forecast * 100) %>%
+    select(-Measure, -Forecast, -YoY, -Lower_80, -Lower_95, -Upper_80, -Upper_95) %>%
+    dplyr::rename(Measure = Phasings_Obs,
+                  Forecast = Phasings_Forecast) %>%
+    select(Board, Date, Type, Measure, Forecast, everything()) %>%
+    mutate(Type = "Phasings")
+  
+  ### Save file for 26/27
+  write.xlsx(forecast_phasings, glue('data/Phasings/{fy_short} Phasings.xlsx'))
+  
+} else {
+  forecast_phasings <- read_excel(glue('data/Phasings/{fy_short} Phasings.xlsx'))
+}
 
 ############## Trend Monitoring Data ############## 
 
 ## List all Excel files in the directory
-file_list <- list.files(path = "data/Supplementary Trend Data/", pattern = "\\.xlsx$", full.names = TRUE)
+file_list <- list.files(path = "data/Supplementary Trend Data", pattern = "\\.xlsx$", full.names = TRUE)
 
 ## Read all files into a list of data frames
 data_list <- map(file_list, ~read.xlsx(.x, startRow = 2, cols = 2:7, sep.names = ' '))
@@ -229,10 +221,21 @@ combined_data_wd <- combined_data_wd %>%
 
 ############## Performance ############## 
 forecast_performance <- read_excel('forecasts/sarima/output/forecast-performance.xlsx')
+  
+accuracy <- forecast_performance %>%
+  # create column with forecast parameters
+  mutate(Model = paste0("(", p, ", 1, ", q, ")(", P, ", 1, ", Q, ")[12]")) %>%
+  select(`Prescribing Health Board` = board, Measure = type, Model, `Run Number` = run,
+         Version = version, `Average MAPE` = forecast_error)
 
 ############## Variables ############## 
 healthboards <- unique(forecast_items$Board)
 financial_years <- unique(forecast_items$FY)
+measures <- unique(accuracy$Measure)
+run_numbers <- unique(accuracy$`Run Number`)
+
+performance_hbs <- c("All boards", healthboards[healthboards %!in% "SCOTLAND"]) # Scotland forecast is aggregated, so no need for it here. 
+                                                                                # Need all boards option for filter
 
 # Create a custom theme
 my_theme <- bs_theme(

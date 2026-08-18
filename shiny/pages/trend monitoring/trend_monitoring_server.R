@@ -11,20 +11,6 @@ pp_wd <- reactive({
   
 })
 
-df <- combined_data_wd %>%
-  filter(`Paid Date` == '2025-06-30') 
-
-plot <- plot_ly(
-  data = df,
-  x = ~`Presc Health Board Name`,
-  y = ~`Avg No of Items per prescription`,
-  color = ~`Presc Health Board Name`,
-  colors = setNames(palette, levels(df$`Presc Health Board Name`)),
-  type = 'bar') %>%
-  layout(barmode = 'group') 
-
-plot
-
 output$pp_wd_plot <- renderPlotly({
   
   plot <- plot_ly(
@@ -81,6 +67,10 @@ output$pp_wd_plot <- renderPlotly({
            yaxis = list(title = 'Number of prescriptions per working day'),
            font = list(family = 'Arial'))
   
+  plot <- config(plot,
+                 modeBarButtonsToRemove = bttn_remove,
+                 displaylogo = FALSE)
+  
   plot
   
   
@@ -129,6 +119,10 @@ output$items_pp <- renderPlotly({
                         #     list(step = "all")))),
            yaxis = list(title = 'Average number of items per prescription'),
            font = list(family = 'Arial'))
+  
+  plot <- config(plot,
+                 modeBarButtonsToRemove = bttn_remove,
+                 displaylogo = FALSE)
   
   plot
   

@@ -47,6 +47,8 @@ library(feasts)
 path <- '/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast'
 setwd('/PHI_conf/PrescribingBCS/Topics/Budgets/Phasings/Development/prescribing-forecast')
 
+source("functions/core_functions.R")
+
 # These are the columns that will be forecasted
 # WARNING: The more columns included, the longer the runtime will be. It is recommended that this script is set to run as a Workbench job.
 working_day = FALSE
@@ -58,23 +60,25 @@ columns_to_forecast = c(
   'Cost per item'
 )
 
-# This variable decides what years to cap the time series at upon each run
-# Time series begins in 2011
+# Set this year based on the last month loaded into nDCVP - if you want to run a forecast up until the same month 
+# recently loaded into nDCVP but from a different year, you can enter it here too.
+years_to_run <- c(2026)
 
-# Month of the year that time series is capped on will be guided by the last month of data loaded into PIS
+# number of months for forecast to be compared with against historical data (if set at 12, forecast vs. 
+# observed for previous year will give an average absolute error)
+historical_data = 12
 
-# Set this year based on the last month loaded into nDCVP
-years_to_run <- c(2025)
-historical_data = 12 # number of months for forecast to be compared with against historical data (if set at 12, forecast vs. observed for previous year will give an average absolute error)
-run_number = 999 # update each time
+run_number = 5 # update each time
+version_number = 2.2 # if new version is created, new script is created and number updated
 
+# List of healthboards, comment out boards if you want to run a forecast for specific boards
 healthboards <- c("NHS AYRSHIRE & ARRAN", "NHS BORDERS", "NHS DUMFRIES & GALLOWAY", "NHS FIFE",
                   "NHS FORTH VALLEY", "NHS GRAMPIAN", "NHS GREATER GLASGOW & CLYDE", "NHS HIGHLAND", 
                   "NHS LANARKSHIRE", "NHS LOTHIAN", "NHS TAYSIDE", "NHS WESTERN ISLES", "NHS ORKNEY", 
                   "NHS SHETLAND", "SCOTLAND")
 
 # 2. Read in data and some processing ----
-data <- read.csv(paste0(glue('shiny/forecasts/data/Historical Data.csv')), check.names = FALSE) %>% # REMINDER: check that this is the correct file from the BOXI run you have just scheduled
+data <- read.csv('data/Time-Series Data/Historical Data.csv', check.names = FALSE) %>% # REMINDER: check that this is the correct file from the BOXI run you have just scheduled
   filter(`Presc Health Board Name` %in% healthboards)
 
 data$`Claim PD Paid GIC excl. BB` <- as.double(gsub(",", "", data$`Claim PD Paid GIC excl. BB`))
@@ -83,7 +87,7 @@ data$`Claim PD Paid GIC excl. BB` <- as.double(gsub(",", "", data$`Claim PD Paid
 
 board_data <- data %>%
   mutate(`Paid Date` = dmy(`Paid Date`)) %>%
-  filter(`Paid Date` > '2009-12-31' & `Paid Date` < "2025-04-01") # filter data for 2010 onwards so those values can be used as lags for 2011, where there was introduction of free prescriptions
+  filter(`Paid Date` > '2009-12-31') # filter data for 2010 onwards so those values can be used as lags for 2011, where there was introduction of free prescriptions
 
 rm(data)
 
@@ -101,7 +105,7 @@ board_data <- board_data %>%
   arrange(`Presc Health Board Name`, `Paid Date`) #%>%
 #filter(`Paid Date` < "2026-01-01")
 
-board_data$`Cost per item`[board_data$`Cost per item` %in% c("", NA, NaN)] <- 0 # assign NAs to any blank values
+board_data$`Cost per item`[board_data$`Cost per item` %in% c("", NA, NaN)] <- 0 # assign 0 to any blank values
 
 ## 2.2 Create healthboard and date variables ----
 healthboards <- unique(board_data$`Presc Health Board Name`) 
@@ -155,99 +159,6 @@ dates <- unique(board_data$`Paid Date`)
 latest_date <- max(board_data$`Paid Date`)
 max_date <- latest_date - months(historical_data)
 
-## 3.2. Calculating business days - controlled by working_day logical variable ----
-
-if (working_day == TRUE) {
-  
-  ## Calculate business days for each month, keep commented out if don't want per working day figure. Holidays required to be updated at end of 2026.
-  start_date <- min(dates)
-  end_date <- max(dates)
-  
-  holidays <- c(
-    # 2004 holidays
-    '2004-01-01', '2004-01-02', '2004-04-09', '2004-05-03', '2004-05-31', '2004-08-02', '2004-11-30', '2004-12-27', '2004-12-28',
-    # 2005 holidays
-    '2005-01-03', '2005-01-04', '2005-03-25', '2005-05-02', '2005-05-30', '2005-08-01', '2005-11-30', '2005-12-26', '2005-12-27',
-    # 2006 holidays
-    '2006-01-02', '2006-01-03', '2006-04-14', '2006-05-01', '2006-05-29', '2006-08-07', '2006-11-30', '2006-12-25', '2006-12-26',
-    # 2007 holidays
-    '2007-01-01', '2007-01-02', '2007-04-06', '2007-05-07', '2007-05-28', '2007-08-06', '2007-11-30', '2007-12-25', '2007-12-26',
-    # 2008 holidays
-    '2008-01-01', '2008-01-02', '2008-03-21', '2008-05-05', '2008-05-26', '2008-08-04', '2008-12-01', '2008-12-25', '2008-12-26',
-    # 2009 holidays
-    '2009-01-01', '2009-01-02', '2009-04-10', '2009-05-04', '2009-05-25', '2009-08-03', '2009-11-30', '2009-12-25', '2009-12-28',
-    # 2010 holidays
-    '2010-01-01', '2010-01-04', '2010-04-02', '2010-05-03', '2010-05-31', '2010-08-02', '2010-11-30', '2010-12-27', '2010-12-28',
-    # 2011 holidays
-    '2011-01-03', '2011-01-04', '2011-04-22', '2011-04-29', '2011-05-02', '2011-05-30', '2011-08-01', '2011-11-30', '2011-12-26', '2011-12-27',
-    # 2012 holidays
-    '2012-01-02', '2012-01-03', '2012-04-06', '2012-05-07', '2012-06-04', '2012-06-05', '2012-08-06', '2012-11-30', '2012-12-25', '2012-12-26',
-    # 2013 holidays
-    '2013-01-01', '2013-01-02', '2013-03-29', '2013-05-06', '2013-05-27', '2013-08-05', '2013-12-02', '2013-12-25', '2013-12-26',
-    # 2014 holidays
-    '2014-01-01', '2014-01-02', '2014-04-18', '2014-05-05', '2014-05-26', '2014-08-04', '2014-12-01', '2014-12-25', '2014-12-26',
-    # 2015 holidays
-    '2015-01-01', '2015-01-02', '2015-04-03', '2015-05-04', '2015-05-25', '2015-08-03', '2015-11-30', '2015-12-25', '2015-12-28',
-    # 2016 holidays
-    '2016-01-01', '2016-01-04', '2016-03-25', '2016-05-02', '2016-05-30', '2016-08-01', '2016-11-30', '2016-12-26', '2016-12-27',
-    # 2017 holidays
-    '2017-01-02', '2017-01-03', '2017-04-14', '2017-05-01', '2017-05-29', '2017-08-07', '2017-11-30', '2017-12-25', '2017-12-26',
-    # 2018 holidays
-    '2018-01-01', '2018-01-02', '2018-03-30', '2018-05-07', '2018-05-28', '2018-08-06', '2018-11-30', '2018-12-25', '2018-12-26',
-    # 2019 holidays
-    '2019-01-01', '2019-01-02', '2019-04-19', '2019-05-06', '2019-05-27', '2019-08-05', '2019-12-02', '2019-12-25', '2019-12-26',
-    # 2020 holidays
-    '2020-01-01', '2020-01-02', '2020-04-10', '2020-05-08', '2020-05-25', '2020-08-03', '2020-11-30', '2020-12-25', '2020-12-28',
-    # 2021 holidays
-    '2021-01-01', '2021-01-04', '2021-04-02', '2021-05-03', '2021-05-31', '2021-08-02', '2021-11-30', '2021-12-27', '2021-12-28',
-    # 2022 holidays
-    '2022-01-03', '2022-01-04', '2022-04-15', '2022-05-02', '2022-06-02', '2022-06-03', '2022-08-01', '2022-09-19', '2022-11-30', '2022-12-26', '2022-12-27',
-    # 2023 holidays
-    '2023-01-02', '2023-01-03', '2023-04-07', '2023-05-01', '2023-05-08', '2023-05-29', '2023-08-07', '2023-11-30', '2023-12-25', '2023-12-26',
-    # 2024 holidays
-    '2024-01-01', '2024-01-02', '2024-03-29', '2024-05-06', '2024-05-27', '2024-08-05', '2024-12-02', '2024-12-25', '2024-12-26',
-    # 2025 holidays
-    '2025-01-01', '2025-01-02', '2025-04-18', '2025-05-05', '2025-05-26', '2025-08-04', '2025-12-01', '2025-12-25', '2025-12-26',
-    # 2026 holidays
-    '2026-01-01', '2026-01-02', '2026-04-03', '2026-05-04', '2026-05-25', '2026-08-03', '2026-11-30', '2026-12-25', '2026-12-28',
-    "2027-01-01"
-    # add in holidays for further years below
-    
-  )
-  
-  saveRDS(holidays, 'shiny/data/holidays.rds')
-  
-  # Create a calendar excluding weekends and holidays
-  Scotland <- create.calendar(name = "Scotland", weekdays = c("saturday", "sunday"), holidays = holidays)
-  
-  # Generate a sequence of months
-  months <- seq(
-    from = as.Date(format(start_date, "%Y-%m-01")),
-    to   = as.Date(format(end_date, "%Y-%m-01")),
-    by   = "month"
-  )
-  
-  # Calculate business days for each month
-  business_days <- sapply(months, function(month) {
-    first_day <- as.Date(format(month, "%Y-%m-01"))
-    last_day  <- ceiling_date(first_day, "month") - days(1)
-    bizdays::bizdays(first_day, last_day, Scotland)
-  })
-  
-  # Combine results into a data frame
-  result <- data.frame(
-    Date = as.Date(format(ceiling_date(months, "month") - days(1), "%Y-%m-%d")),
-    Business_Days = business_days
-  )
-  
-  saveRDS(result, "shiny/forecasts/data/business_days_lookup.rds")
-  
-  result <- read_rds(glue("{path}/shiny/data/business_days_lookup.rds"))
-  
-}
-
-start_time <- Sys.time()
-
 # Create empty results_list with required columns and correct data types
 results_list <- tibble(board = character(),
                        p = numeric(),
@@ -266,7 +177,7 @@ results_list <- tibble(board = character(),
 
 max_year <- max(year(board_data$`Paid Date`))
 
-## 3.3. SARIMA Forecast (function) ---- 
+## 3.2. SARIMA Forecast (function) ---- 
 
 run_forecast <- function(columns, hbs, years) {
   
@@ -295,56 +206,15 @@ run_forecast <- function(columns, hbs, years) {
         
         df <- board_data %>%
           filter(`Presc Health Board Name` == board) %>%
-          select(`Paid Date`, column) %>% # can only select date column and predictor variable for use in time series
+          select(all_of(`Paid Date`, column)) %>% # can only select date column and predictor variable for use in time series
           filter(`Paid Date` > '2011-03-31' & `Paid Date` < MaxDate + days(1))
         
         y_ts <- ts(df[[column]], start = c(2011,4), frequency = 12) # start of time series limited to post-2011 due to introduction of free prescriptions, frequency is 12 to indicate monthly time-series
         
         comparison <- board_data %>%
           filter(`Presc Health Board Name` == board) %>%
-          select(`Paid Date`, column) %>%
+          select(all_of(`Paid Date`, column)) %>%
           filter(`Paid Date` > MaxDate & `Paid Date` < window_max + days(1))
-        
-        # # SARIMA grid
-        # p_values <- 0:9
-        # d_values <- 0:1
-        # q_values <- 0:9
-        # 
-        # results <- tibble()
-        # 
-        # for (p in p_values) {
-        #   for (d in d_values) {
-        #     for (q in q_values) {
-        #       tryCatch({
-        #         fit <- Arima(y_ts, order = c(p, d, q), seasonal = c(1,0,1))
-        #         p_value <- checkresiduals(fit, plot = FALSE)$p.value
-        #         forecast_obj <- forecast(fit, h = historical_data)
-        #         accuracylist <- as_tibble(accuracy(forecast_obj))
-        #         forecast_list <- window(forecast_obj$mean, end = c(year(window_max), month(window_max)))
-        #         
-        #         comparison <- comparison %>%
-        #           mutate(forecast = forecast_list,
-        #                  error = (abs(.data[[column]] - forecast) / .data[[column]]) * 100)
-        #         
-        #         results <- bind_rows(results, tibble(
-        #           board = board,
-        #           p = p, d = d, q = q,
-        #           AIC = AIC(fit),
-        #           BIC = BIC(fit),
-        #           AICc = fit$aicc,
-        #           ME = accuracylist$ME,
-        #           MPE = accuracylist$MPE,
-        #           MAPE = accuracylist$MAPE,
-        #           ACF1 = accuracylist$ACF1,
-        #           p_value = p_value,
-        #           forecast_error = mean(comparison$error)
-        #         ))
-        #       }, error = function(e) {
-        #         message(paste("Error for ARIMA(", p, ",", d, ",", q, "):", e$message))
-        #       })
-        #     }
-        #   }
-        # }
         
         # SARIMA grid
         p_values <- 0:4
@@ -401,7 +271,8 @@ run_forecast <- function(columns, hbs, years) {
     }
     
     full_results <- bind_rows(full_results, column_results %>% mutate(type = column,
-                                                                      run = run_number))
+                                                                      run = run_number,
+                                                                      version = version_number))
   }
   
   return(full_results)
@@ -410,22 +281,24 @@ run_forecast <- function(columns, hbs, years) {
   
 }
 
-# 3.4. Run and save forecast here - controlled by forecast_evaluation logical variable ----
-forecast_performance <- run_forecast(columns_to_forecast, # ensure this is only one column at a time
-                                     healthboards, # using healthboards variable, can be changed to certain boards
-                                     years_to_run) # enter time series limit to be used
+## 3.3. Run and save forecast here - controlled by forecast_evaluation logical variable ----
+forecast_performance <- run_forecast(columns_to_forecast, # defined at the top of the script
+                                     healthboards, 
+                                     years_to_run)
 
 latest_forecast_date <- format(Sys.Date())
 
-saveRDS(forecast_performance, glue('{path}/shiny/forecasts/sarima/output/', historical_data,' months/run ', run_number,'/forecast-performance-', latest_forecast_date, '.rds'))
+saveRDS(forecast_performance, glue('{path}/forecasts/sarima/output/run {run_number}/performance/forecast-performance-{run_number}.rds'))
 
-# performance_file <- read_excel('shiny/forecasts/sarima/output/forecast-performance.xlsx') %>%
-#   bind_rows(forecast_performance)
-# 
-# write.xlsx(performance_file, 'shiny/forecasts/sarima/output/forecast-performance.xlsx', overwrite = TRUE)
+## 3.4. Update master performance file for use in dashboard (this script contains latest run number) ----
+master_pt <- read_excel(glue('{path}/forecasts/sarima/output/forecast-performance.xlsx'))
+
+new_performance <- update_mpt(master_pt, forecast_performance)
+
+write.xlsx(new_performance, glue('{path}/forecasts/sarima/output/forecast-performance.xlsx'), overwrite = TRUE)
 
 ## 3.5. Create full table of forecasted data with confidence intervals - controlled by forecast_results logical variable ----
-forecast_performance <- readRDS(glue('{path}/shiny/forecasts/sarima/output/', historical_data,' months/run ', run_number,'/forecast-performance-', latest_forecast_date, '.rds'))
+forecast_performance <- readRDS(glue('{path}/forecasts/sarima/output/run {run_number}/performance/forecast-performance-{run_number}.rds'))
 
 # Create years vector
 years <- unique(forecast_performance$year)
@@ -453,7 +326,7 @@ for (hb in healthboards) {
       
       df <- board_data %>% # code does same as it does in run_forecast code
         filter(`Presc Health Board Name` == hb) %>%
-        select(`Paid Date`, column) %>%
+        select(all_of(`Paid Date`, column)) %>%
         #select(Date, `Claim PD Number of Paid Items`) %>%
         filter(`Paid Date` > '2011-03-31' & `Paid Date` < MaxDate + days(1))
       
@@ -569,10 +442,9 @@ result <- board_data %>%
   full_join(combined_forecast)
 
 # Save final table
-saveRDS(result, glue('{path}/shiny/forecasts/sarima/output/forecast-run-', run_number, '.rds'))
+saveRDS(result, glue('{path}/forecasts/sarima/output/run {run_number}/forecast-run-{run_number}.rds'))
 
 # Measuring time
 end <- Sys.time()
 diff <- end - start
-
-saveRDS(diff, 'shiny/forecasts/sarima/time.rds')
+diff
